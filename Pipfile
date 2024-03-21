@@ -4,7 +4,9 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-python-telegram-bot = "*"
+python-telegram-bot = "==13.0"
+requests = "*"
+python-dotenv = "*"
 
 [dev-packages]
 

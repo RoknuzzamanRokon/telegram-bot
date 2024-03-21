@@ -23,8 +23,14 @@ def get_market_data():
     return {"price": 100, "trend": "upward"}  # Mocked data for demonstration
 
 def main():
-    token = '7140481417:AAHGrdKjCCbMguXFIoUaSsuPDzRRaGEN-gI'  # Replace 'YOUR_BOT_TOKEN' with your actual bot token
-    updater = Updater(token)
+    token = '7140481417:AAHGrdKjCCbMguXFIoUaSsuPDzRRaGEN-gI'
+    print(token)
+    print(token_telegram)
+    if token==token_telegram:
+        print('true')
+    else:
+        print('false')
+    updater = Updater(token_telegram)
 
     print("Bot started")
     updater.start_polling()
@@ -36,5 +42,5 @@ def main():
     updater.start_polling()
     updater.idle()
 
-if  __name__ == '__main__':
+if __name__ == '__main__':
     main()
