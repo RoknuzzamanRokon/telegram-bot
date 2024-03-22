@@ -7,7 +7,7 @@ import requests
 load_dotenv()
 
 api_alpha = os.environ.get('ALPHA_API')
-token_telegram = os.environ.get('TELEGRAME_TOKEN')
+token_telegram = os.environ.get('TELEGRAM_TOKEN')
 
 
 def start(update: Update, context: CallbackContext) -> None:
