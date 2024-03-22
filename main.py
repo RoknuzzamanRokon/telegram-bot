@@ -1,5 +1,5 @@
-from telegram import Update
-from telegram.ext import Updater, CommandHandler, CallbackContext
+from telegram import Update, ForceReply
+from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters, CallbackContext
 from dotenv import load_dotenv
 import os
 import requests
@@ -11,10 +11,11 @@ token_telegram = os.environ.get('TELEGRAM_TOKEN')
 
 
 def start(update: Update, context: CallbackContext) -> None:
-    update.message.reply_text('Hello! I am your trading bot. '
-                              'Use /trade to execute a mock trade.'
-                              'Use /price to execute price.'
-                              "Use '/dailydata' to execute daily data.")
+    update.message.reply_text('Hello! I am your 🤖🤖trading bot🤖🤖. \n\n'
+                              'Use /trade to execute a mock trade.\n'
+                              'Use /price to execute price.\n'
+                              "Use '/daily_data' to execute daily data.\n"
+                              "Use '/market_status' to execute market status.")
 
 def trade(update: Update, context: CallbackContext) -> None:
     data = get_market_data()
@@ -99,6 +100,36 @@ Market Cap (USD): {data.get('6. market cap (USD)', 'N/A')}
     
     update.message.reply_text(message)
 
+def get_market_status(api_key):
+    url = f'https://www.alphavantage.co/query?function=MARKET_STATUS&apikey={api_key}'
+    response = requests.get(url)
+    data = response.json()
+    return data
+
+def market_status(update: Update, context: CallbackContext) -> None:
+    update.message.reply_text("Want to know about any region? Write any region name: \n\n Regin name:-👇👇👇👇\n👉👉'United States', 'Canada', 'United Kingdom', 'Germany', 'France', 'Spain', 'Portugal', 'Japan', 'India', 'Mainland China','Hong Kong','Brazil', 'Mexico','South Africa'.👈👈 \n\nWrite billow 👇👇", reply_markup=ForceReply(selective=True))
+
+def handle_response(update: Update, context: CallbackContext) -> None:
+    user_response = update.message.text
+
+    data = get_market_status(os.getenv('ALPHA_API'))
+
+    for market in data.get('markets',[]):
+        if user_response.lower() in market.get('region', '').lower():
+            message = (
+                "********* Market Status **********\n\n"
+                f"🏕️Region: {market['region']}\n"
+                f"💹Market Type: {market['market_type']}\n"
+                f"💰Primary Exchanges: {market['primary_exchanges']}\n"
+                f"😇Local Open: {market['local_open']}\n"
+                f"😔Local Close: {market['local_close']}\n"
+                f"🕵️‍♂️Current Status: {market['current_status']}\n"
+                f"📒Notes: {market['notes']}"
+            )
+            update.message.reply_text(message)
+            return
+
+    update.message.reply_text("Sorry 🥺, I couldn't find the market information for that region.")
 
 
 def main():
@@ -111,8 +142,11 @@ def main():
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("trade", trade))
     dp.add_handler(CommandHandler("price", price))
-    dp.add_handler(CommandHandler("dailydata", daily_data))
+    dp.add_handler(CommandHandler("daily_data", daily_data))
 
+    
+    dp.add_handler(CommandHandler("market_status", market_status))
+    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_response))
 
     updater.start_polling()
     updater.idle()
