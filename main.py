@@ -49,7 +49,7 @@ def price(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(message)
 
 
-def get_daily_crypto_data(api_key, symbol='BTC', market='USD'):
+def get_daily_crypto_data(api_key, symbol, market):
     url = f'https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_DAILY&symbol={symbol}&market={market}&apikey={api_key}'
     response = requests.get(url)
     data = response.json()
@@ -75,8 +75,25 @@ def daily_data(update: Update, context: CallbackContext) -> None:
     
     data = get_daily_crypto_data(api_key, symbol, market)
     if data:
-        # Format the message with the desired information
-        message = f"Today's {symbol} Data in {market}:\nOpen: {data.get('1a. open (' + market + ')', 'N/A')}\nHigh: {data.get('2a. high (' + market + ')', 'N/A')}\nLow: {data.get('3a. low (' + market + ')', 'N/A')}\nClose: {data.get('4a. close (' + market + ')', 'N/A')}"
+        message = f"""
+Today's {symbol} Data in {market}:
+💹 Market: {market}
+👇👇👇👇👇👇👇
+Open: {data.get(f'1a. open ({market})', 'N/A')}
+High: {data.get(f'2a. high ({market})', 'N/A')}
+Low: {data.get(f'3a. low ({market})', 'N/A')}
+Close: {data.get(f'4a. close ({market})', 'N/A')}
+
+⚧ Symbol: {symbol}
+👇👇👇👇👇👇👇
+Open: {data.get(f'1b. open ({symbol})', 'N/A')}
+High: {data.get(f'2b. high ({symbol})', 'N/A')}
+Low: {data.get(f'3b. low ({symbol})', 'N/A')}
+Close: {data.get(f'4b. close ({symbol})', 'N/A')}
+
+Volume: {data.get('5. volume', 'N/A')}
+Market Cap (USD): {data.get('6. market cap (USD)', 'N/A')}
+"""
     else:
         message = "Data is currently unavailable. Please try again later or check the symbol and market."
     
@@ -85,7 +102,7 @@ def daily_data(update: Update, context: CallbackContext) -> None:
 
 
 def main():
-    updater = Updater(token_telegram)
+    updater = Updater(token_telegram, use_context=True)
 
     print("Bot started")
     updater.start_polling()
