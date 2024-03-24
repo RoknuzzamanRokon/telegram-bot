@@ -20,7 +20,9 @@ def start(update: Update, context: CallbackContext) -> None:
                               'Use /trade to execute a mock trade.\n'
                               'Use /price to execute price.\n'
                               "Use '/daily_data' to execute daily data.\n"
-                              "Use '/market_status' to execute market status.")
+                              "Use '/market_status' to execute market status.\n"
+                              "Use '/naru' to subscribe bot.\n"
+                              "Use '/unsub_naru' to unsubscribe bot.\n")
 
 def trade(update: Update, context: CallbackContext) -> None:
     data = get_market_data()
@@ -139,6 +141,9 @@ def handle_response(update: Update, context: CallbackContext) -> None:
 
 
 
+
+
+
 bot = Bot(token=token_telegram)
 
 
@@ -148,7 +153,15 @@ user_chat_ids = set()
 def naru(update, context):
     user_chat_id = update.effective_chat.id
     user_chat_ids.add(user_chat_id)  # Add the user's chat ID to the set
-    context.bot.send_message(chat_id=user_chat_id, text="Welcome! You're now subscribed to Narutoe AI Bot.")
+    context.bot.send_message(chat_id=user_chat_id, text="Welcome!🤝🤝 You're now subscribed to Narutoe AI Bot🥳🥳🥳🥳.")
+
+def unsub_naru(update, context):
+    user_chat_id = update.effective_chat.id
+    if user_chat_id in user_chat_ids:
+        user_chat_ids.remove(user_chat_id)  # Remove the user's chat ID from the set
+        context.bot.send_message(chat_id=user_chat_id, text="You have unsubscribed from crypto news updates.")
+    else:
+        context.bot.send_message(chat_id=user_chat_id, text="You are not subscribed.")
 
 
 def get_latest_crypto_news(api_key):
@@ -177,7 +190,7 @@ def send_latest_crypto_news():
         if current_news_id != last_sent_news_id:
             news_title = latest_news.get("title", "Latest Crypto News\n")
             news_body = latest_news.get("body", "Check the link for more details.")
-            message = f"Title: {news_title}\n\nBody: {news_body}"
+            message = f"Title: {news_title}\n\n👉👉👉👉: {news_body}"
             for chat_id in user_chat_ids:
                 bot.send_message(chat_id=chat_id, text=message)
             last_sent_news_id = current_news_id  # Update the last sent news ID
@@ -220,6 +233,7 @@ def main():
 
 
     dp.add_handler(CommandHandler('naru', naru))
+    dp.add_handler(CommandHandler('unsub_naru', unsub_naru))
 
     schedule.every(1).minutes.do(send_latest_crypto_news)
 
