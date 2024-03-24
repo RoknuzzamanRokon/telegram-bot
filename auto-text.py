@@ -22,7 +22,8 @@ def start(update: Update, context: CallbackContext) -> None:
                               "Use '/daily_data' to execute daily data.\n"
                               "Use '/market_status' to execute market status.\n"
                               "Use '/naru' to subscribe bot.\n"
-                              "Use '/unsub_naru' to unsubscribe bot.\n")
+                              "Use '/unsub_naru' to unsubscribe bot.\n\n"
+                              "NOTE:- If you subscribe then you get latest news from our channel.")
 
 def trade(update: Update, context: CallbackContext) -> None:
     data = get_market_data()
