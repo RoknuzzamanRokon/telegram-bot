@@ -10,10 +10,10 @@ import os
 
 load_dotenv()
 
-api_key = os.getenv('CRYPTO_COMPARE_API')
+crypto_compare_api_key = os.getenv('CRYPTO_COMPARE_API')
 api_alpha = os.environ.get('ALPHA_API')
 token_telegram = os.environ.get('TELEGRAM_TOKEN')
-
+coin_base_api_key = os.getenv('COIN_BASE_API_KEY')
 
 def start(update: Update, context: CallbackContext) -> None:
     update.message.reply_text('Hello! I am your 🤖🤖trading bot🤖🤖. \n\n'
@@ -22,7 +22,8 @@ def start(update: Update, context: CallbackContext) -> None:
                               "Use '/daily_data' to execute daily data.\n"
                               "Use '/market_status' to execute market status.\n"
                               "Use '/naru' to subscribe bot.\n"
-                              "Use '/unsub_naru' to unsubscribe bot.\n\n"
+                              "Use '/unsub_naru' to unsubscribe bot.\n"
+                              "Use '/csc' to 'check subscriber count' bot.\n\n"
                               "NOTE:- If you subscribe then you get latest news from our channel.")
 
 def trade(update: Update, context: CallbackContext) -> None:
@@ -46,15 +47,33 @@ def get_market_data_2(symbol='USDT'):
         return {"price": price, "trend": trend}
     except KeyError:
         return {"price": "Unavailable", "trend": "Unknown"}
+
+
+def get_current_price(coin_symbol):
+    url = f'https://api.coinbase.com/v2/prices/{coin_symbol}-USD/spot'
+
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {coin_base_api_key}'
+    }
+
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        data = response.json()
+        current_price = data['data']['amount']
+        return current_price
+    except Exception as e:
+        print(f'Error: {str(e)}')
+        return None
     
 
 def price(update: Update, context: CallbackContext) -> None:
     if context.args:
         symbol = context.args[0].upper()
-        data = get_market_data_2(symbol)
-        message = f"The current price of {symbol} is {data['price']}, and the trend is {data['trend']}."
+        data = get_current_price(coin_symbol=symbol)
+        message = f"The current price of {symbol} is {data} USDT."
     else:
-        message = "Please provide a stock symbol. Usage: /price <SYMBOL>"
+        message = "Please provide a symbol. Usage: /price btc"
     update.message.reply_text(message)
 
 
@@ -159,7 +178,7 @@ def naru(update, context):
 def unsub_naru(update, context):
     user_chat_id = update.effective_chat.id
     if user_chat_id in user_chat_ids:
-        user_chat_ids.remove(user_chat_id)  # Remove the user's chat ID from the set
+        user_chat_ids.remove(user_chat_id)  
         context.bot.send_message(chat_id=user_chat_id, text="You have unsubscribed from crypto news updates.")
     else:
         context.bot.send_message(chat_id=user_chat_id, text="You are not subscribed.")
@@ -184,7 +203,7 @@ last_sent_news_id = None
 
 def send_latest_crypto_news():
     global last_sent_news_id  # Refer to the global variable
-    latest_news = get_latest_crypto_news(api_key)
+    latest_news = get_latest_crypto_news(crypto_compare_api_key)
     if latest_news != "No news found.":
         current_news_id = latest_news.get("id", "")
         # Check if the news is different from the last one sent
@@ -213,6 +232,16 @@ def run_continuously(interval=1):
     return cease_continuous_run
 
 
+def check_subscriber_count(update, context):
+    ADMIN_CHAT_ID = os.getenv('CHAT_ID')
+
+    user_chat_id = update.effective_chat.id
+    if user_chat_id == ADMIN_CHAT_ID:  # Check if the user is the admin
+        subscriber_count = len(user_chat_ids)  # Get the number of subscribers
+        context.bot.send_message(chat_id=user_chat_id, text=f"Current subscriber count: {subscriber_count}")
+    else:
+        context.bot.send_message(chat_id=user_chat_id, text="You are not authorized to use this command.")
+
 
 
 
@@ -232,6 +261,7 @@ def main():
     dp.add_handler(CommandHandler("market_status", market_status))
     dp.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_response))
 
+    dp.add_handler(CommandHandler('csc', check_subscriber_count))
 
     dp.add_handler(CommandHandler('naru', naru))
     dp.add_handler(CommandHandler('unsub_naru', unsub_naru))
