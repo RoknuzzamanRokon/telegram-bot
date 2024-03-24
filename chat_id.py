@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN_2')  # Make sure you've set your bot's token as an environment variable
+TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')  # Make sure you've set your bot's token as an environment variable
 print(TELEGRAM_TOKEN)
 def start(update: Update, context: CallbackContext) -> None:
     update.message.reply_text('Send me any message and I will tell you the Chat ID.')
