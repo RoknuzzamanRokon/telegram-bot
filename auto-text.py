@@ -1,6 +1,5 @@
 from telegram.ext import Updater, CallbackContext,CommandHandler
 from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters, CallbackContext
-
 from telegram import Bot, Update, ForceReply
 import schedule
 import time
@@ -12,10 +11,6 @@ import os
 load_dotenv()
 
 api_key = os.getenv('CRYPTO_COMPARE_API')
-
-
-
-
 api_alpha = os.environ.get('ALPHA_API')
 token_telegram = os.environ.get('TELEGRAM_TOKEN')
 
@@ -140,11 +135,6 @@ def handle_response(update: Update, context: CallbackContext) -> None:
             return
 
     update.message.reply_text("Sorry 🥺, I couldn't find the market information for that region.")
-
-
-
-
-
 
 
 
