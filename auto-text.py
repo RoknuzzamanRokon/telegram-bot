@@ -1,6 +1,5 @@
-from telegram.ext import Updater, CallbackContext,CommandHandler
-from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters, CallbackContext
-from telegram import Bot, Update, ForceReply
+from telegram.ext import Updater, CallbackContext, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
+from telegram import Bot, Update, ForceReply, InlineKeyboardButton, InlineKeyboardMarkup
 import schedule
 import time
 import threading
@@ -21,9 +20,11 @@ def start(update: Update, context: CallbackContext) -> None:
                               'Use /price to execute price.\n'
                               "Use '/daily_data' to execute daily data.\n"
                               "Use '/market_status' to execute market status.\n"
+                              "Use '/check_quick_price' to 'check quick coin price' bot.\n\n"
+                              "This is for USER Subscriber options"
                               "Use '/naru' to subscribe bot.\n"
                               "Use '/unsub_naru' to unsubscribe bot.\n"
-                              "Use '/csc' to 'check subscriber count' bot.\n\n"
+                              "Use '/csc' to 'check subscriber count' bot.\n"
                               "NOTE:- If you subscribe then you get latest news from our channel.")
 
 def trade(update: Update, context: CallbackContext) -> None:
@@ -64,6 +65,28 @@ def price(update: Update, context: CallbackContext) -> None:
     else:
         message = "Please provide a symbol. Usage: /price btc"
     update.message.reply_text(message)
+
+
+
+
+def check_quick_price(update: Update, context: CallbackContext) -> None:
+    keyboard = [[InlineKeyboardButton("BTC", callback_data='BTC'),
+                 InlineKeyboardButton("ETH", callback_data='ETH')]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    update.message.reply_text('Please choose:', reply_markup=reply_markup)
+
+def check_quick_price_button(update: Update, context: CallbackContext) -> None:
+    query = update.callback_query
+    query.answer()  # Important to call this method
+    coin_symbol = query.data
+    price = get_current_price(coin_symbol)
+    if price:
+        message = f"The current price of {coin_symbol} is ${price}."
+    else:
+        message = "Failed to fetch the current price."
+    context.bot.send_message(chat_id=query.message.chat_id, text=message)
+
+
 
 
 
@@ -250,6 +273,9 @@ def main():
     dp.add_handler(CommandHandler("trade", trade))
     dp.add_handler(CommandHandler("price", price))
     dp.add_handler(CommandHandler("daily_data", daily_data))
+    dp.add_handler(CommandHandler("check_quick_price", check_quick_price))
+
+    dp.add_handler(CallbackQueryHandler(check_quick_price_button))
 
     
     dp.add_handler(CommandHandler("market_status", market_status))
