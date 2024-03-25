@@ -21,7 +21,7 @@ def start(update: Update, context: CallbackContext) -> None:
                               "Use '/daily_data' to execute daily data.\n"
                               "Use '/market_status' to execute market status.\n"
                               "Use '/check_quick_price' to 'check quick coin price' bot.\n\n"
-                              "This is for USER Subscriber options"
+                              "This is for USER Subscriber options\n"
                               "Use '/naru' to subscribe bot.\n"
                               "Use '/unsub_naru' to unsubscribe bot.\n"
                               "Use '/csc' to 'check subscriber count' bot.\n"
@@ -70,13 +70,15 @@ def price(update: Update, context: CallbackContext) -> None:
 
 
 def check_quick_price(update: Update, context: CallbackContext) -> None:
-    keyboard = [[InlineKeyboardButton("BTC", callback_data='BTC'),
+    keyboard = [[InlineKeyboardButton("   BTC   ", callback_data='BTC'),
                  InlineKeyboardButton("ETH", callback_data='ETH'),
                  InlineKeyboardButton("BNB", callback_data='BNB'),
                  InlineKeyboardButton("SOL", callback_data='SOL'),
                  InlineKeyboardButton("USDC", callback_data='USDC'),
                  InlineKeyboardButton("SHIB", callback_data='SHIB'),
-                 InlineKeyboardButton("RSR", callback_data='RSR')
+                 InlineKeyboardButton("RSR", callback_data='RSR'),
+                 InlineKeyboardButton("RSR", callback_data='RSR'),InlineKeyboardButton("RSR test 2", callback_data='RSR'),
+                 InlineKeyboardButton("RSR test 3", callback_data='RSR')
                  ]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     update.message.reply_text('Please choose:', reply_markup=reply_markup)
@@ -155,7 +157,7 @@ def get_market_status(api_key):
     return data
 
 def market_status(update: Update, context: CallbackContext) -> None:
-    update.message.reply_text("Want to know about any region? Write any region name: \n\n Regin name:-👇👇👇👇\n👉👉'United States', 'Canada', 'United Kingdom', 'Germany', 'France', 'Spain', 'Portugal', 'Japan', 'India', 'Mainland China','Hong Kong','Brazil', 'Mexico','South Africa'.👈👈 \n\nWrite billow 👇👇", reply_markup=ForceReply(selective=True))
+    update.message.reply_text("Want to know about any region? Write any region name: \n\n Regin name:-👇👇👇👇\n👉👉'United States', 'Canada', 'United Kingdom', 'Germany', 'France', 'Spain', 'Portugal', 'Japan', 'India', 'Mainland China','Hong Kong','Brazil', 'Mexico','South Africa'.👈👈 \n\nWrite below 👇👇", reply_markup=ForceReply(selective=True))
 
 def market_status_handle_response(update: Update, context: CallbackContext) -> None:
     user_response = update.message.text
