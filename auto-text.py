@@ -71,7 +71,13 @@ def price(update: Update, context: CallbackContext) -> None:
 
 def check_quick_price(update: Update, context: CallbackContext) -> None:
     keyboard = [[InlineKeyboardButton("BTC", callback_data='BTC'),
-                 InlineKeyboardButton("ETH", callback_data='ETH')]]
+                 InlineKeyboardButton("ETH", callback_data='ETH'),
+                 InlineKeyboardButton("BNB", callback_data='BNB'),
+                 InlineKeyboardButton("SOL", callback_data='SOL'),
+                 InlineKeyboardButton("USDC", callback_data='USDC'),
+                 InlineKeyboardButton("SHIB", callback_data='SHIB'),
+                 InlineKeyboardButton("RSR", callback_data='RSR')
+                 ]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     update.message.reply_text('Please choose:', reply_markup=reply_markup)
 
@@ -208,29 +214,27 @@ def get_latest_crypto_news(api_key):
     response = requests.get(url, headers=headers)
     data = response.json()
     if 'Data' in data and len(data['Data']) > 0:
-        latest_news = data['Data'][0]  # Assuming the first news is the latest
+        latest_news = data['Data'][0]  
         return latest_news
     else:
         return "No news found."
 
 
 
-# Global variable to track the last sent news ID
 last_sent_news_id = None
 
 def send_latest_crypto_news():
-    global last_sent_news_id  # Refer to the global variable
+    global last_sent_news_id  
     latest_news = get_latest_crypto_news(crypto_compare_api_key)
     if latest_news != "No news found.":
         current_news_id = latest_news.get("id", "")
-        # Check if the news is different from the last one sent
         if current_news_id != last_sent_news_id:
             news_title = latest_news.get("title", "Latest Crypto News\n")
             news_body = latest_news.get("body", "Check the link for more details.")
             message = f"Title: {news_title}\n\n👉👉👉👉: {news_body}"
             for chat_id in user_chat_ids:
                 bot.send_message(chat_id=chat_id, text=message)
-            last_sent_news_id = current_news_id  # Update the last sent news ID
+            last_sent_news_id = current_news_id  
 
 
 def run_continuously(interval=1):
@@ -253,8 +257,8 @@ def check_subscriber_count(update, context):
     ADMIN_CHAT_ID = os.getenv('CHAT_ID')
 
     user_chat_id = update.effective_chat.id
-    if user_chat_id == ADMIN_CHAT_ID:  # Check if the user is the admin
-        subscriber_count = len(user_chat_ids)  # Get the number of subscribers
+    if user_chat_id == ADMIN_CHAT_ID:  
+        subscriber_count = len(user_chat_ids)
         context.bot.send_message(chat_id=user_chat_id, text=f"Current subscriber count: {subscriber_count}")
     else:
         context.bot.send_message(chat_id=user_chat_id, text="You are not authorized to use this command.")
