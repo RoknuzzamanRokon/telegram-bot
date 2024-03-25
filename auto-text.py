@@ -37,17 +37,6 @@ def get_market_data():
     return {"price": 100, "trend": "upward"}  # Mocked data for demonstration
 
 
-def get_market_data_2(symbol='USDT'):
-    url = f'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={symbol}&apikey={api_alpha}'
-    response = requests.get(url)
-    data = response.json()
-    try:
-        price = data['Global Quote']['05. price']
-        trend = "upward" if float(data['Global Quote']['09. change']) > 0 else "downward"
-        return {"price": price, "trend": trend}
-    except KeyError:
-        return {"price": "Unavailable", "trend": "Unknown"}
-
 
 def get_current_price(coin_symbol):
     url = f'https://api.coinbase.com/v2/prices/{coin_symbol}-USD/spot'
@@ -75,6 +64,8 @@ def price(update: Update, context: CallbackContext) -> None:
     else:
         message = "Please provide a symbol. Usage: /price btc"
     update.message.reply_text(message)
+
+
 
 
 def get_daily_crypto_data(api_key, symbol, market):
@@ -127,6 +118,7 @@ Market Cap (USD): {data.get('6. market cap (USD)', 'N/A')}
     
     update.message.reply_text(message)
 
+
 def get_market_status(api_key):
     url = f'https://www.alphavantage.co/query?function=MARKET_STATUS&apikey={api_key}'
     response = requests.get(url)
@@ -136,7 +128,7 @@ def get_market_status(api_key):
 def market_status(update: Update, context: CallbackContext) -> None:
     update.message.reply_text("Want to know about any region? Write any region name: \n\n Regin name:-👇👇👇👇\n👉👉'United States', 'Canada', 'United Kingdom', 'Germany', 'France', 'Spain', 'Portugal', 'Japan', 'India', 'Mainland China','Hong Kong','Brazil', 'Mexico','South Africa'.👈👈 \n\nWrite billow 👇👇", reply_markup=ForceReply(selective=True))
 
-def handle_response(update: Update, context: CallbackContext) -> None:
+def market_status_handle_response(update: Update, context: CallbackContext) -> None:
     user_response = update.message.text
 
     data = get_market_status(os.getenv('ALPHA_API'))
@@ -182,6 +174,8 @@ def unsub_naru(update, context):
         context.bot.send_message(chat_id=user_chat_id, text="You have unsubscribed from crypto news updates.")
     else:
         context.bot.send_message(chat_id=user_chat_id, text="You are not subscribed.")
+
+
 
 
 def get_latest_crypto_news(api_key):
@@ -259,12 +253,12 @@ def main():
 
     
     dp.add_handler(CommandHandler("market_status", market_status))
-    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_response))
+    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, market_status_handle_response))
 
-    dp.add_handler(CommandHandler('csc', check_subscriber_count))
 
     dp.add_handler(CommandHandler('naru', naru))
     dp.add_handler(CommandHandler('unsub_naru', unsub_naru))
+    dp.add_handler(CommandHandler('csc', check_subscriber_count))
 
     schedule.every(1).minutes.do(send_latest_crypto_news)
 
