@@ -260,7 +260,7 @@ def main():
     dp.add_handler(CommandHandler('unsub_naru', unsub_naru))
     dp.add_handler(CommandHandler('csc', check_subscriber_count))
 
-    schedule.every(1).minutes.do(send_latest_crypto_news)
+    schedule.every(10).minutes.do(send_latest_crypto_news)
 
     # Start running the scheduler in a new thread
     run_continuously()
