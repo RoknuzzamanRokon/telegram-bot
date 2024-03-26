@@ -68,24 +68,18 @@ def price(update: Update, context: CallbackContext) -> None:
 
 
 
-
 def check_quick_price(update: Update, context: CallbackContext) -> None:
-    keyboard = [[InlineKeyboardButton("   BTC   ", callback_data='BTC'),
-                 InlineKeyboardButton("ETH", callback_data='ETH'),
-                 InlineKeyboardButton("BNB", callback_data='BNB'),
-                 InlineKeyboardButton("SOL", callback_data='SOL'),
-                 InlineKeyboardButton("USDC", callback_data='USDC'),
-                 InlineKeyboardButton("SHIB", callback_data='SHIB'),
-                 InlineKeyboardButton("RSR", callback_data='RSR'),
-                 InlineKeyboardButton("RSR", callback_data='RSR'),InlineKeyboardButton("RSR test 2", callback_data='RSR'),
-                 InlineKeyboardButton("RSR test 3", callback_data='RSR')
-                 ]]
+    keyboard = [
+        [InlineKeyboardButton("BTC", callback_data='BTC'), InlineKeyboardButton("ETH", callback_data='ETH'), InlineKeyboardButton("USDC", callback_data='USDC')],
+        [InlineKeyboardButton("BNB", callback_data='BNB'), InlineKeyboardButton("SOL", callback_data='SOL'), InlineKeyboardButton("SHIB", callback_data='SHIB')],
+        [InlineKeyboardButton("RSR", callback_data='RSR')]
+    ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     update.message.reply_text('Please choose:', reply_markup=reply_markup)
 
 def check_quick_price_button(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
-    query.answer()  # Important to call this method
+    query.answer()    
     coin_symbol = query.data
     price = get_current_price(coin_symbol)
     if price:
