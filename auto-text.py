@@ -14,6 +14,8 @@ api_alpha = os.environ.get('ALPHA_API')
 token_telegram = os.environ.get('TELEGRAM_TOKEN')
 coin_base_api_key = os.getenv('COIN_BASE_API_KEY')
 
+
+
 def start(update: Update, context: CallbackContext) -> None:
     update.message.reply_text('Hello! I am your 🤖🤖trading bot🤖🤖. \n\n'
                               'Use /trade to execute a mock trade.\n'
@@ -25,17 +27,55 @@ def start(update: Update, context: CallbackContext) -> None:
                               "Use '/naru' to subscribe bot.\n"
                               "Use '/unsub_naru' to unsubscribe bot.\n"
                               "Use '/csc' to 'check subscriber count' bot.\n"
+                              "Use '/home_page_button'"
                               "NOTE:- If you subscribe then you get latest news from our channel.")
 
-def trade(update: Update, context: CallbackContext) -> None:
-    data = get_market_data()
-    if data["trend"] == "upward":
-        update.message.reply_text("Executing buy order due to an upward trend.")
-    else:
-        update.message.reply_text("Executing sell order due to a downward trend.")
 
-def get_market_data():
-    return {"price": 100, "trend": "upward"}  # Mocked data for demonstration
+def trade(update: Update, context: CallbackContext) -> None:
+    response_text = "This Section under maintenance......."
+
+    # Check if it's a callback query from a button click
+    if update.callback_query:
+        # Use context.bot.send_message for callback queries
+        context.bot.send_message(chat_id=update.callback_query.message.chat_id, text=response_text)
+    else:
+        # Use update.message.reply_text for commands
+        update.message.reply_text(response_text)
+
+
+
+
+def ron(update: Update, context: CallbackContext) -> None:
+    keyboard = [
+        [InlineKeyboardButton("Mock Trade", callback_data='trade'),
+         InlineKeyboardButton("Check Price", callback_data='price')],
+        [InlineKeyboardButton("Daily Data", callback_data='daily_data'),
+         InlineKeyboardButton("Market Status", callback_data='market_status')],
+        [InlineKeyboardButton("Quick Price Check", callback_data='check_quick_price'),
+         InlineKeyboardButton("Subscribe", callback_data='naru')],
+        [InlineKeyboardButton("Unsubscribe", callback_data='unsub_naru'),
+         InlineKeyboardButton("Subscriber Count", callback_data='csc')]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    update.message.reply_text('Please choose an action:', reply_markup=reply_markup)
+
+
+def button_click_handler(update: Update, context: CallbackContext) -> None:
+    query = update.callback_query
+    query.answer()
+
+    # Call the appropriate function based on the callback data
+    if query.data == 'trade':
+        trade(update, context)
+    elif query.data == 'price':
+        # Since price function expects a coin symbol, you might need to ask the user or modify how this is handled
+        context.bot.send_message(chat_id=query.message.chat_id, text="Please send the symbol as a message.")
+    # Add similar conditions for other functionalities
+
+
+
+
+
 
 
 
@@ -74,6 +114,7 @@ def check_quick_price(update: Update, context: CallbackContext) -> None:
         [InlineKeyboardButton("BNB", callback_data='BNB'), InlineKeyboardButton("SOL", callback_data='SOL'), InlineKeyboardButton("SHIB", callback_data='SHIB')],
         [InlineKeyboardButton("RSR", callback_data='RSR')]
     ]
+
     reply_markup = InlineKeyboardMarkup(keyboard)
     update.message.reply_text('Please choose:', reply_markup=reply_markup)
 
@@ -267,15 +308,23 @@ def main():
     print('Bot start...')
 
     updater.start_polling()
-
     dp = updater.dispatcher
+
     dp.add_handler(CommandHandler("start", start))
+
+    dp.add_handler(CommandHandler("ron", ron))
+    dp.add_handler(CallbackQueryHandler(button_click_handler))
+
     dp.add_handler(CommandHandler("trade", trade))
     dp.add_handler(CommandHandler("price", price))
     dp.add_handler(CommandHandler("daily_data", daily_data))
     dp.add_handler(CommandHandler("check_quick_price", check_quick_price))
 
+    # dp.add_handler(CommandHandler("home_page_button", home_page_button))
+
     dp.add_handler(CallbackQueryHandler(check_quick_price_button))
+
+    # Register the CallbackQueryHandler
 
     
     dp.add_handler(CommandHandler("market_status", market_status))
