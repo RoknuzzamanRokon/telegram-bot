@@ -31,15 +31,13 @@ def start(update: Update, context: CallbackContext) -> None:
                               "NOTE:- If you subscribe then you get latest news from our channel.")
 
 
+
 def trade(update: Update, context: CallbackContext) -> None:
     response_text = "This Section under maintenance......."
 
-    # Check if it's a callback query from a button click
     if update.callback_query:
-        # Use context.bot.send_message for callback queries
         context.bot.send_message(chat_id=update.callback_query.message.chat_id, text=response_text)
     else:
-        # Use update.message.reply_text for commands
         update.message.reply_text(response_text)
 
 
@@ -66,7 +64,6 @@ def get_current_price(coin_symbol):
 
 def check_quick_price(update: Update, context: CallbackContext) -> None:
 
-    # It called from button_click_handler, adjust for callback queries
     chat_id = update.callback_query.message.chat_id if update.callback_query else update.message.chat_id
 
     keyboard = [
@@ -76,7 +73,6 @@ def check_quick_price(update: Update, context: CallbackContext) -> None:
     ]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
-    # Use the correct method to send the message based on the context
     if update.callback_query:
         context.bot.send_message(chat_id=chat_id, text='Please choose:', reply_markup=reply_markup)
     else:
@@ -124,18 +120,14 @@ def button_click_handler(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     query.answer()
 
-    # Call the appropriate function based on the callback data
     if query.data == 'trade':
         trade(update, context)
     elif query.data == 'price':
         check_quick_price(update, context)
     elif query.data in ['BTC', 'ETH', 'USDC', 'BNB', 'SOL', 'SHIB', 'RSR']:
         check_quick_price_button(update, context)
-    # elif query.data == 'daily_data':
-    #     context.bot.send_message(chat_id=update.callback_query.message.chat_id, text="Please provide the symbol and market in the format: /daily_data SYMBOL MARKET")
     elif query.data == 'daily_data':
-        # Assuming you have a way to store user state, e.g., a dictionary
-        context.user_data['awaiting_data'] = True  # Set flag indicating awaiting symbol and market
+        context.user_data['awaiting_data'] = True  
         context.bot.send_message(chat_id=update.callback_query.message.chat_id, text="Please provide the symbol and market in the format: SYMBOL MARKET")
 
 
@@ -143,20 +135,15 @@ def button_click_handler(update: Update, context: CallbackContext) -> None:
 
 
 def handle_symbol_market_response(update: Update, context: CallbackContext) -> None:
-    # Check if we're awaiting symbol and market data from this user
     if context.user_data.get('awaiting_data'):
-        # Extract symbol and market from the user's message
         try:
             symbol, market = update.message.text.upper().split()
-            # Call the function to get and send daily data
             daily_data_response(update, context, symbol, market)
-            context.user_data['awaiting_data'] = False  # Reset the flag
+            context.user_data['awaiting_data'] = False  
         except ValueError:
-            # In case the format is incorrect
             update.message.reply_text("Format is incorrect. Please provide SYMBOL MARKET.")
 
 def daily_data_response(update: Update, context: CallbackContext, symbol: str, market: str) -> None:
-    # Your existing logic here, using provided symbol and market
     api_key = os.getenv('ALPHA_API')  
     
     data = get_daily_crypto_data(api_key, symbol, market)
@@ -184,10 +171,8 @@ Market Cap (USD): {data.get('6. market cap (USD)', 'N/A')}
         message = "Data is currently unavailable. Please try again later or check the symbol and market."
     
     if update.callback_query:
-        # Use context.bot.send_message for callback queries
         context.bot.send_message(chat_id=update.callback_query.message.chat_id, text=message)
     else:
-        # Use update.message.reply_text for commands
         update.message.reply_text(message)
 
 
@@ -241,13 +226,9 @@ Market Cap (USD): {data.get('6. market cap (USD)', 'N/A')}
     else:
         message = "Data is currently unavailable. Please try again later or check the symbol and market."
     
-    # update.message.reply_text(message)
-    # Check if it's a callback query from a button click
     if update.callback_query:
-        # Use context.bot.send_message for callback queries
         context.bot.send_message(chat_id=update.callback_query.message.chat_id, text=message)
     else:
-        # Use update.message.reply_text for commands
         update.message.reply_text(message)
 
 
@@ -303,7 +284,7 @@ user_chat_ids = set()
 
 def naru(update, context):
     user_chat_id = update.effective_chat.id
-    user_chat_ids.add(user_chat_id)  # Add the user's chat ID to the set
+    user_chat_ids.add(user_chat_id) 
     context.bot.send_message(chat_id=user_chat_id, text="Welcome!🤝🤝 You're now subscribed to Narutoe AI Bot🥳🥳🥳🥳.")
 
 def unsub_naru(update, context):
