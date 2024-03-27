@@ -462,15 +462,9 @@ def main():
     dp.add_handler(CommandHandler("daily_data", daily_data, pass_args=True))
     dp.add_handler(CommandHandler("check_quick_price", check_quick_price))
 
-
-    # dp.add_handler(CallbackQueryHandler(check_quick_price_button))
     dp.add_handler(MessageHandler(Filters.text & ~Filters.command, generic_text_handler))
 
-
     dp.add_handler(CommandHandler("market_status", market_status))
-    # dp.add_handler(MessageHandler(Filters.text & ~Filters.command, market_status_handle_response))
-
-
 
 
     dp.add_handler(CommandHandler('naru', naru))
@@ -478,14 +472,11 @@ def main():
     dp.add_handler(CommandHandler('csc', check_subscriber_count))
 
     bot_instance = updater.bot
-    user_chat_ids = os.getenv('CHAT_ID')
     crypto_compare_api_key = os.getenv('CRYPTO_COMPARE_API')
 
-    # Correctly pass the 'bot_instance' to scheduled functions
     schedule.every(1).minutes.do(lambda: send_latest_crypto_news(bot=bot_instance, crypto_compare_api_key=crypto_compare_api_key))
     schedule.every(10).minutes.do(send_rsi_signals)
 
-    # Start running the scheduler in a new thread
     run_continuously()
 
     # Start the bot
