@@ -60,11 +60,11 @@ def trade(update: Update, context: CallbackContext) -> None:
 
     # Determine the action based on RSI value
     if rsi_value < 30:
-        action = 'Buy signal detected. 📈'
+        action = 'Buy signal detected. 📈\n\nCurrent {coin_symbol} price is {current_price} USD.\nRSI value is : {round(rsi_value,2)}'
     elif rsi_value > 70:
-        action = 'Sell signal detected. 📉'
+        action = f'Sell signal detected. 📉\n\nCurrent {coin_symbol} price is {current_price} USD.\nRSI value is : {round(rsi_value,2)}'
     else:
-        action = f'Witting for Buy sell Signal.\nCurrent {coin_symbol} price is {current_price} USD.\nRSI value is : {round(rsi_value,2)}'
+        action = f'📈📈Witting for Buy sell Signal📉📉.\n\nCurrent {coin_symbol} price is {current_price} USD.\nRSI value is : {round(rsi_value,2)}'
 
     if update.callback_query:
         context.bot.send_message(chat_id=update.callback_query.message.chat_id, text=action)
@@ -260,6 +260,19 @@ def button_click_handler(update: Update, context: CallbackContext) -> None:
     elif query.data == 'market_status':
         context.user_data['awaiting_market_status'] = True
         context.bot.send_message(chat_id=chat_id, text="Want to know about any region? Write any region name: \n\nRegion name:-👇👇👇👇\n👉👉'United States', 'Canada', 'United Kingdom', 'Germany', 'France', 'Spain', 'Portugal', 'Japan', 'India', 'Mainland China','Hong Kong','Brazil', 'Mexico','South Africa'.👈👈 \n\nWrite below 👇👇")
+    elif query.data == 'help':
+        help(update, context)
+
+
+
+def help(update: Update, context: CallbackContext) -> None:
+    response_text = "If you want to get update news and trade signal then must subscribe.\n Subscribe now for click here 👉 /naru"
+
+    if update.callback_query:
+        context.bot.send_message(chat_id=update.callback_query.message.chat_id, text=response_text)
+    else:
+        update.message.reply_text(response_text)
+
 
 
 
@@ -388,7 +401,7 @@ def send_latest_crypto_news(bot, crypto_compare_api_key):
             last_sent_news_id = current_news_id
 
 
-def send_rsi_signals():
+def send_rsi_signals(bot):
     coin_symbol = 'BTC'
     coin_base_api_key = os.getenv('CRYPTO_COMPARE_API') 
     window_size = 15
@@ -474,8 +487,8 @@ def main():
     bot_instance = updater.bot
     crypto_compare_api_key = os.getenv('CRYPTO_COMPARE_API')
 
-    schedule.every(1).minutes.do(lambda: send_latest_crypto_news(bot=bot_instance, crypto_compare_api_key=crypto_compare_api_key))
-    schedule.every(10).minutes.do(send_rsi_signals)
+    schedule.every(5).minutes.do(lambda: send_latest_crypto_news(bot=bot_instance, crypto_compare_api_key=crypto_compare_api_key))
+    schedule.every(1).minutes.do(lambda: send_rsi_signals(bot=bot_instance))
 
     run_continuously()
 
