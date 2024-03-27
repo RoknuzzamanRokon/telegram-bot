@@ -234,7 +234,8 @@ def home(update: Update, context: CallbackContext) -> None:
          InlineKeyboardButton("Check Price", callback_data='price')],
         [InlineKeyboardButton("Daily Data", callback_data='daily_data'),
          InlineKeyboardButton("Market Status", callback_data='market_status')],
-         [InlineKeyboardButton("Help", callback_data='help')]
+         [InlineKeyboardButton("Help", callback_data='help')],
+         [InlineKeyboardButton("Connect Admin", url='https://t.me/Rokon017399?text=👋+Hello')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     update.message.reply_text('Please choose an action:', reply_markup=reply_markup)
@@ -305,7 +306,7 @@ def generic_text_handler(update: Update, context: CallbackContext) -> None:
         handle_symbol_market_response(update, context)
         context.user_data.pop('awaiting_data', None)  
     else:
-        update.message.reply_text("I'm not sure what you're trying to do. Can you try again?")
+        update.message.reply_text("I'm not sure what you're trying to do. Go to /start option.")
 
 
 
@@ -391,9 +392,9 @@ def send_rsi_signals():
         return
 
     if rsi_value < 30:
-        message = f"Buy signal detected for {coin_symbol}. 📈 Current price: ${current_price} USD. RSI value: {round(rsi_value,2)}"
+        message = f"Buy signal detected for {coin_symbol}.\n 📈 Current price: ${current_price} USD.\n RSI value: {round(rsi_value,2)}"
     elif rsi_value > 70:
-        message = f"Sell signal detected for {coin_symbol}. 📉 Current price: ${current_price} USD. RSI value: {round(rsi_value,2)}"
+        message = f"Sell signal detected for {coin_symbol}.\n 📉 Current price: ${current_price} USD.\n RSI value: {round(rsi_value,2)}"
     else:
         return  
 
