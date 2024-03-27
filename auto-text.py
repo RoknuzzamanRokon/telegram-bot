@@ -35,15 +35,40 @@ def start(update: Update, context: CallbackContext) -> None:
                               "NOTE:- If you subscribe then you get latest news from our channel.")
 
 
-
 def trade(update: Update, context: CallbackContext) -> None:
-    response_text = "This Section under maintenance......."
+    coin_symbol = 'BTC'
+    coin_base_api_key = os.getenv('CRYPTO_COMPARE_API')  # Assuming this is your correct API key variable
+    window_size = 15
+
+    # Fetch the last 60 closing prices
+    closing_prices = get_last_60_closing_prices(coin_symbol, coin_base_api_key)
+    if not closing_prices or isinstance(closing_prices, str):  # Check for errors or empty response
+        response_text = "Failed to fetch closing prices."
+        update.message.reply_text(response_text)
+        return
+
+    # Calculate the RSI value
+    rsi_value = calculate_rsi(closing_prices, window_size)
+
+    # Get the current price of the coin
+    current_price = get_current_price(coin_symbol)
+    if current_price is None:
+        response_text = "Failed to fetch the current price."
+        update.message.reply_text(response_text)
+        return
+
+    # Determine the action based on RSI value
+    if rsi_value < 30:
+        action = 'Buy signal detected. 📈'
+    elif rsi_value > 70:
+        action = 'Sell signal detected. 📉'
+    else:
+        action = f'Witting for Buy sell Signal.\nCurrent {coin_symbol} price is {current_price} USD.\nRSI value is : {round(rsi_value,2)}'
 
     if update.callback_query:
-        context.bot.send_message(chat_id=update.callback_query.message.chat_id, text=response_text)
+        context.bot.send_message(chat_id=update.callback_query.message.chat_id, text=action)
     else:
-        update.message.reply_text(response_text)
-
+        update.message.reply_text(action)
 
 
 

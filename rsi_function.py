@@ -85,10 +85,10 @@ def get_current_price(coin_symbol):
     
 current_price = get_current_price(coin_symbol=coin_symbol)
 
-if rsi_value < 30:
-    print('Buy')
-elif rsi_value > 70:
-    print('Sell')
-else:
-    print(f'Witting for Buy sell Signal.\nCurrent {coin_symbol} price is {current_price} USD.\nRSI value is : {round(rsi_value,2)}')
+# if rsi_value < 30:
+#     print('Buy')
+# elif rsi_value > 70:
+#     print('Sell')
+# else:
+#     print(f'Witting for Buy sell Signal.\nCurrent {coin_symbol} price is {current_price} USD.\nRSI value is : {round(rsi_value,2)}')
 
