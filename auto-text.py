@@ -44,6 +44,7 @@ def trade(update: Update, context: CallbackContext) -> None:
 
 
 
+
 def get_current_price(coin_symbol):
     url = f'https://api.coinbase.com/v2/prices/{coin_symbol}-USD/spot'
 
@@ -61,7 +62,6 @@ def get_current_price(coin_symbol):
         print(f'Error: {str(e)}')
         return None
 
-
 def check_quick_price(update: Update, context: CallbackContext) -> None:
 
     chat_id = update.callback_query.message.chat_id if update.callback_query else update.message.chat_id
@@ -77,8 +77,6 @@ def check_quick_price(update: Update, context: CallbackContext) -> None:
         context.bot.send_message(chat_id=chat_id, text='Please choose:', reply_markup=reply_markup)
     else:
         update.message.reply_text('Please choose:', reply_markup=reply_markup)
-
-
 
 def check_quick_price_button(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
@@ -100,35 +98,6 @@ def price(update: Update, context: CallbackContext) -> None:
         message = "Please provide a symbol. Usage: /price btc"
     update.message.reply_text(message)
 
-
-def ron(update: Update, context: CallbackContext) -> None:
-    keyboard = [
-        [InlineKeyboardButton("Trade", callback_data='trade'),
-         InlineKeyboardButton("Check Price", callback_data='price')],
-        [InlineKeyboardButton("Daily Data", callback_data='daily_data'),
-         InlineKeyboardButton("Market Status", callback_data='market_status')],
-        [InlineKeyboardButton("Quick Price Check", callback_data='check_quick_price'),
-         InlineKeyboardButton("Subscribe", callback_data='naru')],
-        [InlineKeyboardButton("Unsubscribe", callback_data='unsub_naru'),
-         InlineKeyboardButton("Subscriber Count", callback_data='csc')]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    update.message.reply_text('Please choose an action:', reply_markup=reply_markup)
-
-
-def button_click_handler(update: Update, context: CallbackContext) -> None:
-    query = update.callback_query
-    query.answer()
-
-    if query.data == 'trade':
-        trade(update, context)
-    elif query.data == 'price':
-        check_quick_price(update, context)
-    elif query.data in ['BTC', 'ETH', 'USDC', 'BNB', 'SOL', 'SHIB', 'RSR']:
-        check_quick_price_button(update, context)
-    elif query.data == 'daily_data':
-        context.user_data['awaiting_data'] = True  
-        context.bot.send_message(chat_id=update.callback_query.message.chat_id, text="Please provide the symbol and market in the format: SYMBOL MARKET")
 
 
 
@@ -174,9 +143,6 @@ Market Cap (USD): {data.get('6. market cap (USD)', 'N/A')}
         context.bot.send_message(chat_id=update.callback_query.message.chat_id, text=message)
     else:
         update.message.reply_text(message)
-
-
-
 
 def get_daily_crypto_data(api_key, symbol, market):
     url = f'https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_DAILY&symbol={symbol}&market={market}&apikey={api_key}'
@@ -238,6 +204,44 @@ Market Cap (USD): {data.get('6. market cap (USD)', 'N/A')}
 
 
 
+def ron(update: Update, context: CallbackContext) -> None:
+    keyboard = [
+        [InlineKeyboardButton("Trade", callback_data='trade'),
+         InlineKeyboardButton("Check Price", callback_data='price')],
+        [InlineKeyboardButton("Daily Data", callback_data='daily_data'),
+         InlineKeyboardButton("Market Status", callback_data='market_status')],
+        [InlineKeyboardButton("Quick Price Check", callback_data='check_quick_price'),
+         InlineKeyboardButton("Subscribe", callback_data='naru')],
+        [InlineKeyboardButton("Unsubscribe", callback_data='unsub_naru'),
+         InlineKeyboardButton("Subscriber Count", callback_data='csc')]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    update.message.reply_text('Please choose an action:', reply_markup=reply_markup)
+
+def button_click_handler(update: Update, context: CallbackContext) -> None:
+    query = update.callback_query
+    query.answer()
+
+    # This line is the focus: accessing chat_id correctly depending on the type of update
+    chat_id = query.message.chat_id if query else update.message.chat_id
+
+    if query.data == 'trade':
+        trade(update, context)
+    elif query.data == 'price':
+        check_quick_price(update, context)
+    elif query.data in ['BTC', 'ETH', 'USDC', 'BNB', 'SOL', 'SHIB', 'RSR']:
+        check_quick_price_button(update, context)
+    elif query.data == 'daily_data':
+        context.user_data['awaiting_data'] = True
+        context.bot.send_message(chat_id=chat_id, text="Please provide the symbol and market in the format: SYMBOL MARKET")
+    elif query.data == 'market_status':
+        context.user_data['awaiting_market_status'] = True
+        # Use the correctly determined chat_id
+        context.bot.send_message(chat_id=chat_id, text="Want to know about any region? Write any region name: \n\nRegion name:-👇👇👇👇\n👉👉'United States', 'Canada', 'United Kingdom', 'Germany', 'France', 'Spain', 'Portugal', 'Japan', 'India', 'Mainland China','Hong Kong','Brazil', 'Mexico','South Africa'.👈👈 \n\nWrite below 👇👇")
+
+
+
+
 
 
 
@@ -249,13 +253,14 @@ def get_market_status(api_key):
     return data
 
 def market_status(update: Update, context: CallbackContext) -> None:
+    context.user_data['awaiting_market_status'] = True
     update.message.reply_text("Want to know about any region? Write any region name: \n\n Regin name:-👇👇👇👇\n👉👉'United States', 'Canada', 'United Kingdom', 'Germany', 'France', 'Spain', 'Portugal', 'Japan', 'India', 'Mainland China','Hong Kong','Brazil', 'Mexico','South Africa'.👈👈 \n\nWrite below 👇👇", reply_markup=ForceReply(selective=True))
 
 def market_status_handle_response(update: Update, context: CallbackContext) -> None:
     user_response = update.message.text
-
+    print("Handling market status response...")
     data = get_market_status(os.getenv('ALPHA_API'))
-
+    print(data) 
     for market in data.get('markets',[]):
         if user_response.lower() in market.get('region', '').lower():
             message = (
@@ -272,9 +277,33 @@ def market_status_handle_response(update: Update, context: CallbackContext) -> N
             return
 
     update.message.reply_text("Sorry 🥺, I couldn't find the market information for that region.")
+    
 
 
+# def generic_text_handler(update: Update, context: CallbackContext) -> None:
+#     # Check if we're awaiting a market status region from this user
+#     if context.user_data.get('awaiting_market_status'):
+#         market_status_handle_response(update, context)
+#         context.user_data['awaiting_market_status'] = False  # Reset the flag
+#     elif context.user_data.get('awaiting_data'):
+#         # This branch for handling other awaiting data like 'daily_data'
+#         handle_symbol_market_response(update, context)
+#         context.user_data['awaiting_data'] = False
+#     # Add more conditions here for different flags or states as needed
 
+def generic_text_handler(update: Update, context: CallbackContext) -> None:
+    # First, check for awaiting market status response
+    if context.user_data.get('awaiting_market_status'):
+        market_status_handle_response(update, context)
+        context.user_data.pop('awaiting_market_status', None)  # Reset flag
+    # Then check for awaiting symbol/market data
+    elif context.user_data.get('awaiting_data'):
+        handle_symbol_market_response(update, context)
+        context.user_data.pop('awaiting_data', None)  # Reset flag
+    # Add more conditions as needed
+    else:
+        # Fallback or default action if no specific context is found
+        update.message.reply_text("I'm not sure what you're trying to do. Can you try again?")
 
 
 
@@ -378,12 +407,13 @@ def main():
     dp.add_handler(CommandHandler("daily_data", daily_data, pass_args=True))
     dp.add_handler(CommandHandler("check_quick_price", check_quick_price))
 
-    # dp.add_handler(CallbackQueryHandler(check_quick_price_button))
-    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_symbol_market_response))
 
-    
+    # dp.add_handler(CallbackQueryHandler(check_quick_price_button))
+    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, generic_text_handler))
+
+
     dp.add_handler(CommandHandler("market_status", market_status))
-    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, market_status_handle_response))
+    # dp.add_handler(MessageHandler(Filters.text & ~Filters.command, market_status_handle_response))
 
 
 
