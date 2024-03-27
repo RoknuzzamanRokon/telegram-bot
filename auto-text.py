@@ -18,11 +18,13 @@ coin_base_api_key = os.getenv('COIN_BASE_API_KEY')
 
 def start(update: Update, context: CallbackContext) -> None:
     update.message.reply_text('Hello! I am your 🤖🤖trading bot🤖🤖. \n\n'
+                              'Use /home and go to home page.\n\n'
+                              'This section for manually use link'
                               'Use /trade to execute a mock trade.\n'
                               'Use /price to execute price.\n'
                               "Use '/daily_data' to execute daily data.\n"
                               "Use '/market_status' to execute market status.\n"
-                              "Use '/check_quick_price' to 'check quick coin price' bot.\n\n"
+                              "Use '/check_quick_price' to 'check quick coin price' bot.\n\n\n"
                               "This is for USER Subscriber options\n"
                               "Use '/naru' to subscribe bot.\n"
                               "Use '/unsub_naru' to unsubscribe bot.\n"
@@ -97,8 +99,6 @@ def price(update: Update, context: CallbackContext) -> None:
     else:
         message = "Please provide a symbol. Usage: /price btc"
     update.message.reply_text(message)
-
-
 
 
 
@@ -201,19 +201,13 @@ Market Cap (USD): {data.get('6. market cap (USD)', 'N/A')}
 
 
 
-
-
-
-def ron(update: Update, context: CallbackContext) -> None:
+def home(update: Update, context: CallbackContext) -> None:
     keyboard = [
         [InlineKeyboardButton("Trade", callback_data='trade'),
          InlineKeyboardButton("Check Price", callback_data='price')],
         [InlineKeyboardButton("Daily Data", callback_data='daily_data'),
          InlineKeyboardButton("Market Status", callback_data='market_status')],
-        [InlineKeyboardButton("Quick Price Check", callback_data='check_quick_price'),
-         InlineKeyboardButton("Subscribe", callback_data='naru')],
-        [InlineKeyboardButton("Unsubscribe", callback_data='unsub_naru'),
-         InlineKeyboardButton("Subscriber Count", callback_data='csc')]
+         [InlineKeyboardButton("Help", callback_data='help')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     update.message.reply_text('Please choose an action:', reply_markup=reply_markup)
@@ -236,10 +230,7 @@ def button_click_handler(update: Update, context: CallbackContext) -> None:
         context.bot.send_message(chat_id=chat_id, text="Please provide the symbol and market in the format: SYMBOL MARKET")
     elif query.data == 'market_status':
         context.user_data['awaiting_market_status'] = True
-        # Use the correctly determined chat_id
         context.bot.send_message(chat_id=chat_id, text="Want to know about any region? Write any region name: \n\nRegion name:-👇👇👇👇\n👉👉'United States', 'Canada', 'United Kingdom', 'Germany', 'France', 'Spain', 'Portugal', 'Japan', 'India', 'Mainland China','Hong Kong','Brazil', 'Mexico','South Africa'.👈👈 \n\nWrite below 👇👇")
-
-
 
 
 
@@ -258,7 +249,6 @@ def market_status(update: Update, context: CallbackContext) -> None:
 
 def market_status_handle_response(update: Update, context: CallbackContext) -> None:
     user_response = update.message.text
-    print("Handling market status response...")
     data = get_market_status(os.getenv('ALPHA_API'))
     print(data) 
     for market in data.get('markets',[]):
@@ -280,29 +270,15 @@ def market_status_handle_response(update: Update, context: CallbackContext) -> N
     
 
 
-# def generic_text_handler(update: Update, context: CallbackContext) -> None:
-#     # Check if we're awaiting a market status region from this user
-#     if context.user_data.get('awaiting_market_status'):
-#         market_status_handle_response(update, context)
-#         context.user_data['awaiting_market_status'] = False  # Reset the flag
-#     elif context.user_data.get('awaiting_data'):
-#         # This branch for handling other awaiting data like 'daily_data'
-#         handle_symbol_market_response(update, context)
-#         context.user_data['awaiting_data'] = False
-#     # Add more conditions here for different flags or states as needed
 
 def generic_text_handler(update: Update, context: CallbackContext) -> None:
-    # First, check for awaiting market status response
     if context.user_data.get('awaiting_market_status'):
         market_status_handle_response(update, context)
         context.user_data.pop('awaiting_market_status', None)  # Reset flag
-    # Then check for awaiting symbol/market data
     elif context.user_data.get('awaiting_data'):
         handle_symbol_market_response(update, context)
         context.user_data.pop('awaiting_data', None)  # Reset flag
-    # Add more conditions as needed
     else:
-        # Fallback or default action if no specific context is found
         update.message.reply_text("I'm not sure what you're trying to do. Can you try again?")
 
 
@@ -399,7 +375,7 @@ def main():
 
     dp.add_handler(CommandHandler("start", start))
 
-    dp.add_handler(CommandHandler("ron", ron))
+    dp.add_handler(CommandHandler("home", home))
     dp.add_handler(CallbackQueryHandler(button_click_handler))
 
     dp.add_handler(CommandHandler("trade", trade))
