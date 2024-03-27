@@ -29,10 +29,10 @@ def start(update: Update, context: CallbackContext) -> None:
                               "Use '/market_status' to execute market status.\n"
                               "Use '/check_quick_price' to 'check quick coin price' bot.\n\n\n"
                               "This is for USER Subscriber options\n"
-                              "Use '/naru' to subscribe bot.\n"
-                              "Use '/unsub_naru' to unsubscribe bot.\n"
-                              "Use '/csc' to 'check subscriber count' bot.\n"
-                              "Use '/home_page_button'"
+                              "Use '/subscribe' to subscribe bot.\n"
+                              "Use '/unsubscribe' to unsubscribe bot.\n"
+                              "Use '/csc' to 'check subscriber count' bot.\n\n"
+
                               "NOTE:- If you subscribe then you get latest news from our channel.")
 
 
@@ -328,12 +328,12 @@ def generic_text_handler(update: Update, context: CallbackContext) -> None:
 # Global set to store unique chat IDs
 user_chat_ids = set()
 
-def naru(update, context):
+def subscribe(update, context):
     user_chat_id = update.effective_chat.id
     user_chat_ids.add(user_chat_id) 
     context.bot.send_message(chat_id=user_chat_id, text="Welcome!🤝🤝 You're now subscribed to Narutoe AI Bot🥳🥳🥳🥳.")
 
-def unsub_naru(update, context):
+def unsubscribe(update, context):
     user_chat_id = update.effective_chat.id
     if user_chat_id in user_chat_ids:
         user_chat_ids.remove(user_chat_id)  
@@ -430,23 +430,6 @@ def send_rsi_signals(bot):
 
 
 
-# def run_continuously(interval=1):
-#     """Run the scheduler continuously on a separate thread."""
-#     cease_continuous_run = threading.Event()
-
-#     class ScheduleThread(threading.Thread):
-#         @classmethod
-#         def run(cls):
-#             while not cease_continuous_run.is_set():
-#                 schedule.run_pending()
-#                 time.sleep(interval)
-
-#     continuous_thread = ScheduleThread()
-#     continuous_thread.start()
-#     return cease_continuous_run
-
-
-
 def run_continuously(interval=1):
     """Run scheduled jobs in a separate thread."""
     class SchedulerThread(Thread):
@@ -480,15 +463,15 @@ def main():
     dp.add_handler(CommandHandler("market_status", market_status))
 
 
-    dp.add_handler(CommandHandler('naru', naru))
-    dp.add_handler(CommandHandler('unsub_naru', unsub_naru))
+    dp.add_handler(CommandHandler('subscribe', subscribe))
+    dp.add_handler(CommandHandler('unsubscribe', unsubscribe))
     dp.add_handler(CommandHandler('csc', check_subscriber_count))
 
     bot_instance = updater.bot
     crypto_compare_api_key = os.getenv('CRYPTO_COMPARE_API')
 
-    schedule.every(5).minutes.do(lambda: send_latest_crypto_news(bot=bot_instance, crypto_compare_api_key=crypto_compare_api_key))
-    schedule.every(1).minutes.do(lambda: send_rsi_signals(bot=bot_instance))
+    schedule.every(10).minutes.do(lambda: send_latest_crypto_news(bot=bot_instance, crypto_compare_api_key=crypto_compare_api_key))
+    schedule.every(3).minutes.do(lambda: send_rsi_signals(bot=bot_instance))
 
     run_continuously()
 
