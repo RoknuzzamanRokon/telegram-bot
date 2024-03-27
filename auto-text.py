@@ -250,7 +250,6 @@ def market_status(update: Update, context: CallbackContext) -> None:
 def market_status_handle_response(update: Update, context: CallbackContext) -> None:
     user_response = update.message.text
     data = get_market_status(os.getenv('ALPHA_API'))
-    print(data) 
     for market in data.get('markets',[]):
         if user_response.lower() in market.get('region', '').lower():
             message = (
@@ -274,10 +273,10 @@ def market_status_handle_response(update: Update, context: CallbackContext) -> N
 def generic_text_handler(update: Update, context: CallbackContext) -> None:
     if context.user_data.get('awaiting_market_status'):
         market_status_handle_response(update, context)
-        context.user_data.pop('awaiting_market_status', None)  # Reset flag
+        context.user_data.pop('awaiting_market_status', None)  
     elif context.user_data.get('awaiting_data'):
         handle_symbol_market_response(update, context)
-        context.user_data.pop('awaiting_data', None)  # Reset flag
+        context.user_data.pop('awaiting_data', None)  
     else:
         update.message.reply_text("I'm not sure what you're trying to do. Can you try again?")
 
