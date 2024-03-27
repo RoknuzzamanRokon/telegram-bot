@@ -37,12 +37,12 @@ def start(update: Update, context: CallbackContext) -> None:
 
 def trade(update: Update, context: CallbackContext) -> None:
     coin_symbol = 'BTC'
-    coin_base_api_key = os.getenv('CRYPTO_COMPARE_API')  # Assuming this is your correct API key variable
+    coin_base_api_key = os.getenv('CRYPTO_COMPARE_API') 
     window_size = 15
 
     # Fetch the last 60 closing prices
     closing_prices = get_last_60_closing_prices(coin_symbol, coin_base_api_key)
-    if not closing_prices or isinstance(closing_prices, str):  # Check for errors or empty response
+    if not closing_prices or isinstance(closing_prices, str): 
         response_text = "Failed to fetch closing prices."
         update.message.reply_text(response_text)
         return
@@ -326,6 +326,16 @@ def unsub_naru(update, context):
     else:
         context.bot.send_message(chat_id=user_chat_id, text="You are not subscribed.")
 
+def check_subscriber_count(update, context):
+    ADMIN_CHAT_ID = os.getenv('CHAT_ID')
+
+    user_chat_id = update.effective_chat.id
+    if user_chat_id == ADMIN_CHAT_ID:  
+        subscriber_count = len(user_chat_ids)
+        context.bot.send_message(chat_id=user_chat_id, text=f"Current subscriber count: {subscriber_count}")
+    else:
+        context.bot.send_message(chat_id=user_chat_id, text="You are not authorized to use this command.")
+
 
 
 
@@ -363,6 +373,35 @@ def send_latest_crypto_news():
             last_sent_news_id = current_news_id  
 
 
+def send_rsi_signals():
+    coin_symbol = 'BTC'
+    coin_base_api_key = os.getenv('CRYPTO_COMPARE_API') 
+    window_size = 15
+    closing_prices = get_last_60_closing_prices(coin_symbol, coin_base_api_key)
+
+    if not closing_prices or isinstance(closing_prices, str):
+        print("Failed to fetch closing prices for RSI calculation.")
+        return
+
+    rsi_value = calculate_rsi(closing_prices, window_size)
+    current_price = get_current_price(coin_symbol)
+
+    if current_price is None:
+        print("Failed to fetch the current price for RSI signal.")
+        return
+
+    if rsi_value < 30:
+        message = f"Buy signal detected for {coin_symbol}. 📈 Current price: ${current_price} USD. RSI value: {round(rsi_value,2)}"
+    elif rsi_value > 70:
+        message = f"Sell signal detected for {coin_symbol}. 📉 Current price: ${current_price} USD. RSI value: {round(rsi_value,2)}"
+    else:
+        return  
+
+    for chat_id in user_chat_ids:
+        bot.send_message(chat_id=chat_id, text=message)
+
+
+
 def run_continuously(interval=1):
     """Run the scheduler continuously on a separate thread."""
     cease_continuous_run = threading.Event()
@@ -378,16 +417,6 @@ def run_continuously(interval=1):
     continuous_thread.start()
     return cease_continuous_run
 
-
-def check_subscriber_count(update, context):
-    ADMIN_CHAT_ID = os.getenv('CHAT_ID')
-
-    user_chat_id = update.effective_chat.id
-    if user_chat_id == ADMIN_CHAT_ID:  
-        subscriber_count = len(user_chat_ids)
-        context.bot.send_message(chat_id=user_chat_id, text=f"Current subscriber count: {subscriber_count}")
-    else:
-        context.bot.send_message(chat_id=user_chat_id, text="You are not authorized to use this command.")
 
 
 
@@ -425,6 +454,7 @@ def main():
     dp.add_handler(CommandHandler('csc', check_subscriber_count))
 
     schedule.every(10).minutes.do(send_latest_crypto_news)
+    schedule.every(1).minutes.do(send_rsi_signals)
 
     # Start running the scheduler in a new thread
     run_continuously()
