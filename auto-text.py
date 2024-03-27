@@ -6,6 +6,9 @@ import threading
 from dotenv import load_dotenv
 import requests
 import os 
+from rsi_function import calculate_rsi, get_last_60_closing_prices
+from threading import Thread
+
 
 load_dotenv()
 
@@ -26,22 +29,47 @@ def start(update: Update, context: CallbackContext) -> None:
                               "Use '/market_status' to execute market status.\n"
                               "Use '/check_quick_price' to 'check quick coin price' bot.\n\n\n"
                               "This is for USER Subscriber options\n"
-                              "Use '/naru' to subscribe bot.\n"
-                              "Use '/unsub_naru' to unsubscribe bot.\n"
-                              "Use '/csc' to 'check subscriber count' bot.\n"
-                              "Use '/home_page_button'"
+                              "Use '/subscribe' to subscribe bot.\n"
+                              "Use '/unsubscribe' to unsubscribe bot.\n"
+                              "Use '/csc' to 'check subscriber count' bot.\n\n"
+
                               "NOTE:- If you subscribe then you get latest news from our channel.")
 
 
-
 def trade(update: Update, context: CallbackContext) -> None:
-    response_text = "This Section under maintenance......."
+    coin_symbol = 'BTC'
+    coin_base_api_key = os.getenv('CRYPTO_COMPARE_API') 
+    window_size = 15
+
+    # Fetch the last 60 closing prices
+    closing_prices = get_last_60_closing_prices(coin_symbol, coin_base_api_key)
+    if not closing_prices or isinstance(closing_prices, str): 
+        response_text = "Failed to fetch closing prices."
+        update.message.reply_text(response_text)
+        return
+
+    # Calculate the RSI value
+    rsi_value = calculate_rsi(closing_prices, window_size)
+
+    # Get the current price of the coin
+    current_price = get_current_price(coin_symbol)
+    if current_price is None:
+        response_text = "Failed to fetch the current price."
+        update.message.reply_text(response_text)
+        return
+
+    # Determine the action based on RSI value
+    if rsi_value < 30:
+        action = 'Buy signal detected. 📈\n\nCurrent {coin_symbol} price is {current_price} USD.\nRSI value is : {round(rsi_value,2)}'
+    elif rsi_value > 70:
+        action = f'Sell signal detected. 📉\n\nCurrent {coin_symbol} price is {current_price} USD.\nRSI value is : {round(rsi_value,2)}'
+    else:
+        action = f'📈📈Witting for Buy sell Signal📉📉.\n\nCurrent {coin_symbol} price is {current_price} USD.\nRSI value is : {round(rsi_value,2)}'
 
     if update.callback_query:
-        context.bot.send_message(chat_id=update.callback_query.message.chat_id, text=response_text)
+        context.bot.send_message(chat_id=update.callback_query.message.chat_id, text=action)
     else:
-        update.message.reply_text(response_text)
-
+        update.message.reply_text(action)
 
 
 
@@ -207,7 +235,8 @@ def home(update: Update, context: CallbackContext) -> None:
          InlineKeyboardButton("Check Price", callback_data='price')],
         [InlineKeyboardButton("Daily Data", callback_data='daily_data'),
          InlineKeyboardButton("Market Status", callback_data='market_status')],
-         [InlineKeyboardButton("Help", callback_data='help')]
+         [InlineKeyboardButton("Help", callback_data='help')],
+         [InlineKeyboardButton("Connect Admin", url='https://t.me/Rokon017399?text=👋+Hello')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     update.message.reply_text('Please choose an action:', reply_markup=reply_markup)
@@ -231,6 +260,19 @@ def button_click_handler(update: Update, context: CallbackContext) -> None:
     elif query.data == 'market_status':
         context.user_data['awaiting_market_status'] = True
         context.bot.send_message(chat_id=chat_id, text="Want to know about any region? Write any region name: \n\nRegion name:-👇👇👇👇\n👉👉'United States', 'Canada', 'United Kingdom', 'Germany', 'France', 'Spain', 'Portugal', 'Japan', 'India', 'Mainland China','Hong Kong','Brazil', 'Mexico','South Africa'.👈👈 \n\nWrite below 👇👇")
+    elif query.data == 'help':
+        help(update, context)
+
+
+
+def help(update: Update, context: CallbackContext) -> None:
+    response_text = "If you want to get update news and trade signal then must subscribe.\n Subscribe now for click here 👉 /naru"
+
+    if update.callback_query:
+        context.bot.send_message(chat_id=update.callback_query.message.chat_id, text=response_text)
+    else:
+        update.message.reply_text(response_text)
+
 
 
 
@@ -278,7 +320,7 @@ def generic_text_handler(update: Update, context: CallbackContext) -> None:
         handle_symbol_market_response(update, context)
         context.user_data.pop('awaiting_data', None)  
     else:
-        update.message.reply_text("I'm not sure what you're trying to do. Can you try again?")
+        update.message.reply_text("I'm not sure what you're trying to do. Go to /start option.")
 
 
 
@@ -286,18 +328,28 @@ def generic_text_handler(update: Update, context: CallbackContext) -> None:
 # Global set to store unique chat IDs
 user_chat_ids = set()
 
-def naru(update, context):
+def subscribe(update, context):
     user_chat_id = update.effective_chat.id
     user_chat_ids.add(user_chat_id) 
     context.bot.send_message(chat_id=user_chat_id, text="Welcome!🤝🤝 You're now subscribed to Narutoe AI Bot🥳🥳🥳🥳.")
 
-def unsub_naru(update, context):
+def unsubscribe(update, context):
     user_chat_id = update.effective_chat.id
     if user_chat_id in user_chat_ids:
         user_chat_ids.remove(user_chat_id)  
         context.bot.send_message(chat_id=user_chat_id, text="You have unsubscribed from crypto news updates.")
     else:
         context.bot.send_message(chat_id=user_chat_id, text="You are not subscribed.")
+
+def check_subscriber_count(update, context):
+    ADMIN_CHAT_ID = os.getenv('CHAT_ID')
+
+    user_chat_id = update.effective_chat.id
+    if user_chat_id == ADMIN_CHAT_ID:  
+        subscriber_count = len(user_chat_ids)
+        context.bot.send_message(chat_id=user_chat_id, text=f"Current subscriber count: {subscriber_count}")
+    else:
+        context.bot.send_message(chat_id=user_chat_id, text="You are not authorized to use this command.")
 
 
 
@@ -322,48 +374,72 @@ bot = Bot(token=token_telegram)
 
 last_sent_news_id = None
 
-def send_latest_crypto_news():
-    global last_sent_news_id  
-    latest_news = get_latest_crypto_news(crypto_compare_api_key)
-    if latest_news != "No news found.":
+
+def send_latest_crypto_news(bot, crypto_compare_api_key):
+    global last_sent_news_id
+    latest_news = get_latest_crypto_news(crypto_compare_api_key)  # This function should return the JSON data shown above
+    
+    if latest_news and latest_news != "No news found.":
         current_news_id = latest_news.get("id", "")
-        if current_news_id != last_sent_news_id:
-            news_title = latest_news.get("title", "Latest Crypto News\n")
-            news_body = latest_news.get("body", "Check the link for more details.")
-            message = f"Title: {news_title}\n\n👉👉👉👉: {news_body}"
+        if current_news_id and current_news_id != last_sent_news_id:
+            news_image_url = latest_news.get("imageurl", None)
+            news_title = latest_news.get("title", "")
+            news_body = latest_news.get("body", "")
+            news_url = latest_news.get("url", "#")
+            
+            caption = f"{news_title}\n\n{news_body}\n\nRead more: {news_url}"
+            if len(caption) > 1024:
+                caption = caption[:1021] + "..."
+            
             for chat_id in user_chat_ids:
-                bot.send_message(chat_id=chat_id, text=message)
-            last_sent_news_id = current_news_id  
+                if news_image_url:
+                    bot.send_photo(chat_id=chat_id, photo=news_image_url, caption=caption)
+                else:
+                    message = f"{news_title}\n\n{news_body}\n\nRead more: {news_url}"
+                    bot.send_message(chat_id=chat_id, text=message)
+            
+            last_sent_news_id = current_news_id
+
+
+def send_rsi_signals(bot):
+    coin_symbol = 'BTC'
+    coin_base_api_key = os.getenv('CRYPTO_COMPARE_API') 
+    window_size = 15
+    closing_prices = get_last_60_closing_prices(coin_symbol, coin_base_api_key)
+
+    if not closing_prices or isinstance(closing_prices, str):
+        print("Failed to fetch closing prices for RSI calculation.")
+        return
+
+    rsi_value = calculate_rsi(closing_prices, window_size)
+    current_price = get_current_price(coin_symbol)
+
+    if current_price is None:
+        print("Failed to fetch the current price for RSI signal.")
+        return
+
+    if rsi_value < 30:
+        message = f"Buy signal detected for {coin_symbol}.\n 📈 Current price: ${current_price} USD.\n RSI value: {round(rsi_value,2)}"
+    elif rsi_value > 70:
+        message = f"Sell signal detected for {coin_symbol}.\n 📉 Current price: ${current_price} USD.\n RSI value: {round(rsi_value,2)}"
+    else:
+        return  
+
+    for chat_id in user_chat_ids:
+        bot.send_message(chat_id=chat_id, text=message)
+
 
 
 def run_continuously(interval=1):
-    """Run the scheduler continuously on a separate thread."""
-    cease_continuous_run = threading.Event()
-
-    class ScheduleThread(threading.Thread):
+    """Run scheduled jobs in a separate thread."""
+    class SchedulerThread(Thread):
         @classmethod
         def run(cls):
-            while not cease_continuous_run.is_set():
+            while True:
                 schedule.run_pending()
                 time.sleep(interval)
-
-    continuous_thread = ScheduleThread()
+    continuous_thread = SchedulerThread()
     continuous_thread.start()
-    return cease_continuous_run
-
-
-def check_subscriber_count(update, context):
-    ADMIN_CHAT_ID = os.getenv('CHAT_ID')
-
-    user_chat_id = update.effective_chat.id
-    if user_chat_id == ADMIN_CHAT_ID:  
-        subscriber_count = len(user_chat_ids)
-        context.bot.send_message(chat_id=user_chat_id, text=f"Current subscriber count: {subscriber_count}")
-    else:
-        context.bot.send_message(chat_id=user_chat_id, text="You are not authorized to use this command.")
-
-
-
 
 def main():
     updater = Updater(token=token_telegram, use_context=True)
@@ -382,24 +458,21 @@ def main():
     dp.add_handler(CommandHandler("daily_data", daily_data, pass_args=True))
     dp.add_handler(CommandHandler("check_quick_price", check_quick_price))
 
-
-    # dp.add_handler(CallbackQueryHandler(check_quick_price_button))
     dp.add_handler(MessageHandler(Filters.text & ~Filters.command, generic_text_handler))
 
-
     dp.add_handler(CommandHandler("market_status", market_status))
-    # dp.add_handler(MessageHandler(Filters.text & ~Filters.command, market_status_handle_response))
 
 
-
-
-    dp.add_handler(CommandHandler('naru', naru))
-    dp.add_handler(CommandHandler('unsub_naru', unsub_naru))
+    dp.add_handler(CommandHandler('subscribe', subscribe))
+    dp.add_handler(CommandHandler('unsubscribe', unsubscribe))
     dp.add_handler(CommandHandler('csc', check_subscriber_count))
 
-    schedule.every(10).minutes.do(send_latest_crypto_news)
+    bot_instance = updater.bot
+    crypto_compare_api_key = os.getenv('CRYPTO_COMPARE_API')
 
-    # Start running the scheduler in a new thread
+    schedule.every(10).minutes.do(lambda: send_latest_crypto_news(bot=bot_instance, crypto_compare_api_key=crypto_compare_api_key))
+    schedule.every(3).minutes.do(lambda: send_rsi_signals(bot=bot_instance))
+
     run_continuously()
 
     # Start the bot

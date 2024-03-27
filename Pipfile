@@ -8,6 +8,7 @@ python-telegram-bot = "==13.0"
 requests = "*"
 python-dotenv = "*"
 schedule = "*"
+metatrader5 = "*"
 
 [dev-packages]
 
