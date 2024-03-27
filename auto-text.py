@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import requests
 import os 
 from rsi_function import calculate_rsi, get_last_60_closing_prices
+from threading import Thread
 
 
 load_dotenv()
@@ -360,18 +361,31 @@ bot = Bot(token=token_telegram)
 
 last_sent_news_id = None
 
-def send_latest_crypto_news():
-    global last_sent_news_id  
-    latest_news = get_latest_crypto_news(crypto_compare_api_key)
-    if latest_news != "No news found.":
+
+def send_latest_crypto_news(bot, crypto_compare_api_key):
+    global last_sent_news_id
+    latest_news = get_latest_crypto_news(crypto_compare_api_key)  # This function should return the JSON data shown above
+    
+    if latest_news and latest_news != "No news found.":
         current_news_id = latest_news.get("id", "")
-        if current_news_id != last_sent_news_id:
-            news_title = latest_news.get("title", "Latest Crypto News\n")
-            news_body = latest_news.get("body", "Check the link for more details.")
-            message = f"Title: {news_title}\n\n👉👉👉👉: {news_body}"
+        if current_news_id and current_news_id != last_sent_news_id:
+            news_image_url = latest_news.get("imageurl", None)
+            news_title = latest_news.get("title", "")
+            news_body = latest_news.get("body", "")
+            news_url = latest_news.get("url", "#")
+            
+            caption = f"{news_title}\n\n{news_body}\n\nRead more: {news_url}"
+            if len(caption) > 1024:
+                caption = caption[:1021] + "..."
+            
             for chat_id in user_chat_ids:
-                bot.send_message(chat_id=chat_id, text=message)
-            last_sent_news_id = current_news_id  
+                if news_image_url:
+                    bot.send_photo(chat_id=chat_id, photo=news_image_url, caption=caption)
+                else:
+                    message = f"{news_title}\n\n{news_body}\n\nRead more: {news_url}"
+                    bot.send_message(chat_id=chat_id, text=message)
+            
+            last_sent_news_id = current_news_id
 
 
 def send_rsi_signals():
@@ -403,24 +417,33 @@ def send_rsi_signals():
 
 
 
-def run_continuously(interval=1):
-    """Run the scheduler continuously on a separate thread."""
-    cease_continuous_run = threading.Event()
+# def run_continuously(interval=1):
+#     """Run the scheduler continuously on a separate thread."""
+#     cease_continuous_run = threading.Event()
 
-    class ScheduleThread(threading.Thread):
+#     class ScheduleThread(threading.Thread):
+#         @classmethod
+#         def run(cls):
+#             while not cease_continuous_run.is_set():
+#                 schedule.run_pending()
+#                 time.sleep(interval)
+
+#     continuous_thread = ScheduleThread()
+#     continuous_thread.start()
+#     return cease_continuous_run
+
+
+
+def run_continuously(interval=1):
+    """Run scheduled jobs in a separate thread."""
+    class SchedulerThread(Thread):
         @classmethod
         def run(cls):
-            while not cease_continuous_run.is_set():
+            while True:
                 schedule.run_pending()
                 time.sleep(interval)
-
-    continuous_thread = ScheduleThread()
+    continuous_thread = SchedulerThread()
     continuous_thread.start()
-    return cease_continuous_run
-
-
-
-
 
 def main():
     updater = Updater(token=token_telegram, use_context=True)
@@ -454,8 +477,13 @@ def main():
     dp.add_handler(CommandHandler('unsub_naru', unsub_naru))
     dp.add_handler(CommandHandler('csc', check_subscriber_count))
 
-    schedule.every(10).minutes.do(send_latest_crypto_news)
-    schedule.every(1).minutes.do(send_rsi_signals)
+    bot_instance = updater.bot
+    user_chat_ids = os.getenv('CHAT_ID')
+    crypto_compare_api_key = os.getenv('CRYPTO_COMPARE_API')
+
+    # Correctly pass the 'bot_instance' to scheduled functions
+    schedule.every(1).minutes.do(lambda: send_latest_crypto_news(bot=bot_instance, crypto_compare_api_key=crypto_compare_api_key))
+    schedule.every(10).minutes.do(send_rsi_signals)
 
     # Start running the scheduler in a new thread
     run_continuously()
