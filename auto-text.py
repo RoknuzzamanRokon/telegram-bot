@@ -6,6 +6,8 @@ import threading
 from dotenv import load_dotenv
 import requests
 import os 
+from rsi_function import calculate_rsi, get_last_60_closing_prices
+
 
 load_dotenv()
 
