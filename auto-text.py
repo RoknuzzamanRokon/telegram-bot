@@ -445,7 +445,6 @@ def main():
     updater = Updater(token=token_telegram, use_context=True)
     print('Bot start...')
 
-    updater.start_polling()
     dp = updater.dispatcher
 
     dp.add_handler(CommandHandler("start", start))
