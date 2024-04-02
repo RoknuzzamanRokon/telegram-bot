@@ -70,10 +70,10 @@ def fourth_number(update: Update, context: CallbackContext) -> int:
     product_id = context.user_data['product_id']
     btc_size = context.user_data['usd']
 
-    set_api_credentials(api_key, api_secret)
-    market_buy = fiat_market_buy(product_id, btc_size)    
-    update.message.reply_text(f'trade {market_buy}')
-    
+    # set_api_credentials(api_key, api_secret)
+    # market_buy = fiat_market_buy(product_id, btc_size)    
+    # update.message.reply_text(f'trade {market_buy}')
+
     return ConversationHandler.END
 
 
