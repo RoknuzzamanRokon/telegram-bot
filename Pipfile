@@ -9,6 +9,7 @@ requests = "*"
 python-dotenv = "*"
 schedule = "*"
 metatrader5 = "*"
+coinbase-advancedtrade-python = "*"
 
 [dev-packages]
 

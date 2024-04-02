@@ -39,13 +39,28 @@ def start(update: Update, context: CallbackContext) -> None:
 
 
 
-
-# CallbackQuery handler for 'Addition' button
-def addition(update: Update, context: CallbackContext) -> int:
+# Unified button handler
+def button_handler(update, context):
     query = update.callback_query
-    query.answer()
-    query.edit_message_text(text="Give the first number:")
-    return FIRST
+    query.answer()  # Notify Telegram that the callback query was received
+    data = query.data
+
+    # Direct the flow based on the callback data
+    if data == 'addition':
+        query.edit_message_text(text="Give the first number for addition:")
+        return FIRST
+    elif data == 'subtraction':
+        query.edit_message_text(text="Give the first number for subtraction:")
+        return SUB_FIRST
+
+
+
+# # CallbackQuery handler for 'Addition' button
+# def addition(update: Update, context: CallbackContext) -> int:
+#     query = update.callback_query
+#     query.answer()
+#     query.edit_message_text(text="Give the first number:")
+#     return FIRST
 
 # Handlers for collecting numbers and calculating the sum
 def first_number(update: Update, context: CallbackContext) -> int:
@@ -68,12 +83,12 @@ def third_number(update: Update, context: CallbackContext) -> int:
 
 
 
-# Start the subtraction conversation
-def subtraction(update: Update, context: CallbackContext) -> int:
-    query = update.callback_query
-    query.answer()
-    query.edit_message_text(text="Give the first number for subtraction:")
-    return SUB_FIRST
+# # Start the subtraction conversation
+# def subtraction(update: Update, context: CallbackContext) -> int:
+#     query = update.callback_query
+#     query.answer()
+#     query.edit_message_text(text="Give the first number for subtraction:")
+#     return SUB_FIRST
 
 # Collect the first number for subtraction
 def sub_first_number(update: Update, context: CallbackContext) -> int:
@@ -92,53 +107,41 @@ def sub_second_number(update: Update, context: CallbackContext) -> int:
 
 
 
-
-
-
-
-
 # Handler for cancelling the operation
 def cancel(update: Update, context: CallbackContext) -> int:
     update.message.reply_text('Operation cancelled.')
     return ConversationHandler.END
 
-def main():
-    TOKEN = token_telegram 
-    updater = Updater(TOKEN, use_context=True)
 
-    print("start bot 1....")
+def main():
+    TOKEN = token_telegram
+    updater = Updater(TOKEN, use_context=True)
 
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
-    print("start bot 2....")
 
     # Define the conversation handler
     conv_handler = ConversationHandler(
-        entry_points=[
-                    CallbackQueryHandler(addition, pattern='^addition$'),
-                    CallbackQueryHandler(subtraction, pattern='^subtraction$')
-                    ],
-        
+        entry_points=[CommandHandler("start", start)],
         states={
             FIRST: [MessageHandler(Filters.text & ~Filters.command, first_number)],
             SECOND: [MessageHandler(Filters.text & ~Filters.command, second_number)],
             THIRD: [MessageHandler(Filters.text & ~Filters.command, third_number)],
             SUB_FIRST: [MessageHandler(Filters.text & ~Filters.command, sub_first_number)],
             SUB_SECOND: [MessageHandler(Filters.text & ~Filters.command, sub_second_number)]
-
         },
         fallbacks=[CommandHandler('cancel', cancel)],
         per_message=False
     )
-    print("start bot 3....")
 
-    dp.add_handler(CommandHandler("start", start))
+    # Register handlers
     dp.add_handler(conv_handler)
-    print("start bot 4....")
+    dp.add_handler(CallbackQueryHandler(button_handler))  # Unified button handler
 
-    # Start the Bot
+    # Start the bot
     updater.start_polling()
     updater.idle()
+
 
 if __name__ == '__main__':
     main()

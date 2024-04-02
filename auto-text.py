@@ -241,6 +241,7 @@ def home(update: Update, context: CallbackContext) -> None:
     reply_markup = InlineKeyboardMarkup(keyboard)
     update.message.reply_text('Please choose an action:', reply_markup=reply_markup)
 
+
 def button_click_handler(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     query.answer()
