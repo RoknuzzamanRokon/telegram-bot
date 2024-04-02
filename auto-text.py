@@ -1,4 +1,4 @@
-from telegram.ext import Updater, CallbackContext, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
+from telegram.ext import Updater, CallbackContext, CommandHandler, MessageHandler, Filters, CallbackQueryHandler, ConversationHandler
 from telegram import Bot, Update, ForceReply, InlineKeyboardButton, InlineKeyboardMarkup
 import schedule
 import time
@@ -359,8 +359,17 @@ def check_subscription(chat_id) -> bool:
 
 
 
+FIRST, SECOND, THIRD, FOURTH = range(4)
 
-
+def trade(update: Update, context: CallbackContext) -> int:
+    query = update.callback_query
+    chat_id = query.message.chat_id
+    if not check_subscription(chat_id):
+        query.edit_message_text(text="Please subscribe to use this feature.")
+        return ConversationHandler.END
+    query.answer()
+    query.edit_message_text(text="Give api key:")
+    return FIRST
 
 
 
