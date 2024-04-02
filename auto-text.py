@@ -328,6 +328,7 @@ def generic_text_handler(update: Update, context: CallbackContext) -> None:
 
 # Global set to store unique chat IDs
 user_chat_ids = set()
+print(user_chat_ids)
 
 def subscribe(update, context):
     user_chat_id = update.effective_chat.id
@@ -351,6 +352,18 @@ def check_subscriber_count(update, context):
         context.bot.send_message(chat_id=user_chat_id, text=f"Current subscriber count: {subscriber_count}")
     else:
         context.bot.send_message(chat_id=user_chat_id, text="You are not authorized to use this command.")
+
+
+def check_subscription(chat_id) -> bool:
+    return chat_id in user_chat_ids
+
+
+
+
+
+
+
+
 
 
 
