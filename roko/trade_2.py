@@ -31,7 +31,7 @@ FIRST, SECOND, THIRD, FOURTH = range(4)
 # Command handler for '/start'
 def start(update: Update, context: CallbackContext) -> None:
     keyboard = [
-                [InlineKeyboardButton("trade", callback_data='trade')]
+                [InlineKeyboardButton("trade now", callback_data='trade_now')]
                 ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     update.message.reply_text('Welcome! Please choose an option:', reply_markup=reply_markup)
@@ -40,7 +40,7 @@ def start(update: Update, context: CallbackContext) -> None:
 
 
 # CallbackQuery handler for 'Addition' button
-def trade(update: Update, context: CallbackContext) -> int:
+def trade_now(update: Update, context: CallbackContext) -> int:
     query = update.callback_query
     query.answer()
     query.edit_message_text(text="Give api key:")
@@ -104,7 +104,7 @@ def main():
     # Define the conversation handler
     conv_handler = ConversationHandler(
         entry_points=[
-                    CallbackQueryHandler(trade, pattern='^trade$')
+                    CallbackQueryHandler(trade_now, pattern='^trade_now$')
                     ],
         
         states={

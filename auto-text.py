@@ -8,6 +8,17 @@ import requests
 import os 
 from rsi_function import calculate_rsi, get_last_60_closing_prices
 from threading import Thread
+import logging
+
+
+
+
+
+
+# Enable logging
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 load_dotenv()
@@ -236,6 +247,7 @@ def home(update: Update, context: CallbackContext) -> None:
         [InlineKeyboardButton("Daily Data", callback_data='daily_data'),
          InlineKeyboardButton("Market Status", callback_data='market_status')],
          [InlineKeyboardButton("Help", callback_data='help')],
+         [InlineKeyboardButton("trade now", callback_data='trade_now')],
          [InlineKeyboardButton("Connect Admin", url='https://t.me/Rokon017399?text=👋+Hello')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -359,9 +371,24 @@ def check_subscription(chat_id) -> bool:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 FIRST, SECOND, THIRD, FOURTH = range(4)
 
-def trade(update: Update, context: CallbackContext) -> int:
+def trade_now(update: Update, context: CallbackContext) -> int:
+    print('clicks')
     query = update.callback_query
     chat_id = query.message.chat_id
     if not check_subscription(chat_id):
@@ -370,6 +397,17 @@ def trade(update: Update, context: CallbackContext) -> int:
     query.answer()
     query.edit_message_text(text="Give api key:")
     return FIRST
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -463,6 +501,31 @@ def run_continuously(interval=1):
                 time.sleep(interval)
     continuous_thread = SchedulerThread()
     continuous_thread.start()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def main():
     updater = Updater(token=token_telegram, use_context=True)
