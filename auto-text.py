@@ -246,7 +246,9 @@ def home(update: Update, context: CallbackContext) -> None:
          InlineKeyboardButton("Market Status", callback_data='market_status')],
          [InlineKeyboardButton("Help", callback_data='help')],
          [InlineKeyboardButton("trade now", callback_data='trade_now')],
-         [InlineKeyboardButton("Connect Admin", url='https://t.me/Rokon017399?text=👋+Hello')]
+         [InlineKeyboardButton("Connect Admin", url='https://t.me/Rokon017399?text=👋+Hello')],
+        [InlineKeyboardButton("Subscribe", callback_data='subscribe'),
+         InlineKeyboardButton("Unsubscribe", callback_data='unsubscribe')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     update.message.reply_text('Please choose an action:', reply_markup=reply_markup)
@@ -281,7 +283,10 @@ def button_click_handler(update: Update, context: CallbackContext) -> None:
    
     elif query.data == 'help':
         help(update, context)
-
+    elif query.data == 'subscribe':
+        subscribe(update, context)
+    elif query.data == 'unsubscribe':
+        unsubscribe(update, context)
 
 
 def help(update: Update, context: CallbackContext) -> None:
