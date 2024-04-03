@@ -1,4 +1,4 @@
-from telegram.ext import Updater, CallbackContext, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
+from telegram.ext import Updater, CallbackContext, CommandHandler, MessageHandler, Filters, CallbackQueryHandler, ConversationHandler
 from telegram import Bot, Update, ForceReply, InlineKeyboardButton, InlineKeyboardMarkup
 import schedule
 import time
@@ -8,6 +8,15 @@ import requests
 import os 
 from rsi_function import calculate_rsi, get_last_60_closing_prices
 from threading import Thread
+import logging
+
+
+
+
+# Enable logging
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 load_dotenv()
@@ -236,10 +245,14 @@ def home(update: Update, context: CallbackContext) -> None:
         [InlineKeyboardButton("Daily Data", callback_data='daily_data'),
          InlineKeyboardButton("Market Status", callback_data='market_status')],
          [InlineKeyboardButton("Help", callback_data='help')],
-         [InlineKeyboardButton("Connect Admin", url='https://t.me/Rokon017399?text=👋+Hello')]
+         [InlineKeyboardButton("trade now", callback_data='trade_now')],
+         [InlineKeyboardButton("Connect Admin", url='https://t.me/Rokon017399?text=👋+Hello')],
+        [InlineKeyboardButton("Subscribe", callback_data='subscribe'),
+         InlineKeyboardButton("Unsubscribe", callback_data='unsubscribe')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     update.message.reply_text('Please choose an action:', reply_markup=reply_markup)
+
 
 def button_click_handler(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
@@ -260,13 +273,24 @@ def button_click_handler(update: Update, context: CallbackContext) -> None:
     elif query.data == 'market_status':
         context.user_data['awaiting_market_status'] = True
         context.bot.send_message(chat_id=chat_id, text="Want to know about any region? Write any region name: \n\nRegion name:-👇👇👇👇\n👉👉'United States', 'Canada', 'United Kingdom', 'Germany', 'France', 'Spain', 'Portugal', 'Japan', 'India', 'Mainland China','Hong Kong','Brazil', 'Mexico','South Africa'.👈👈 \n\nWrite below 👇👇")
+    
+    elif query.data == 'trade_now':
+        if not check_subscription(chat_id):
+            context.bot.sendMessage(chat_id=chat_id, text="Please subscribe to initiate trades.")
+        else:
+            # Instruct the user on what to do next to start the conversation
+            context.bot.sendMessage(chat_id=chat_id, text="Please type '/trade_now' to start trading.")
+   
     elif query.data == 'help':
         help(update, context)
-
+    elif query.data == 'subscribe':
+        subscribe(update, context)
+    elif query.data == 'unsubscribe':
+        unsubscribe(update, context)
 
 
 def help(update: Update, context: CallbackContext) -> None:
-    response_text = "If you want to get update news and trade signal then must subscribe.\n Subscribe now for click here 👉 /naru"
+    response_text = "If you want to get update news and trade signal then must subscribe.\n Subscribe now for click here 👉 /subscribe"
 
     if update.callback_query:
         context.bot.send_message(chat_id=update.callback_query.message.chat_id, text=response_text)
@@ -327,6 +351,7 @@ def generic_text_handler(update: Update, context: CallbackContext) -> None:
 
 # Global set to store unique chat IDs
 user_chat_ids = set()
+print(user_chat_ids)
 
 def subscribe(update, context):
     user_chat_id = update.effective_chat.id
@@ -350,6 +375,76 @@ def check_subscriber_count(update, context):
         context.bot.send_message(chat_id=user_chat_id, text=f"Current subscriber count: {subscriber_count}")
     else:
         context.bot.send_message(chat_id=user_chat_id, text="You are not authorized to use this command.")
+
+
+def check_subscription(chat_id) -> bool:
+    return chat_id in user_chat_ids
+
+
+
+
+
+
+
+
+FIRST, SECOND, THIRD, FOURTH = range(4)
+
+def trade_now(update: Update, context: CallbackContext) -> int:
+    # Check if it's called from a button press (callback query)
+    if update.callback_query:
+        query = update.callback_query
+        query.answer()
+        chat_id = query.message.chat_id
+        # Edit the message if it's from a callback query
+        query.edit_message_text(text="Give api key:")
+    else:
+        # If not from a callback query, assume it's from a command or direct message
+        chat_id = update.message.chat_id
+        # Send a new message instead of editing
+        context.bot.sendMessage(chat_id=chat_id, text="Give api key:")
+    return FIRST
+
+def collect_api_key(update: Update, context: CallbackContext) -> int:
+    collect_api_key = update.message.text
+    context.user_data['collect_api_key'] = collect_api_key
+
+    update.message.reply_text("Give api secret.")
+    return SECOND
+
+def collect_api_secret(update: Update, context: CallbackContext) -> int:
+    collect_api_secret = update.message.text
+    context.user_data['collect_api_secret'] = collect_api_secret
+
+    update.message.reply_text('Give your product key pair.')
+    return THIRD
+
+def collect_product_id(update: Update, context: CallbackContext) -> int:
+    collect_product_id = update.message.text
+    context.user_data['collect_product_id'] = collect_product_id 
+
+    update.message.reply_text("How much would you like to trade?")
+    return  FOURTH
+
+def collect_trade_amount(update: Update, context: CallbackContext) -> int:
+    collect_trade_amount = update.message.text
+    context.user_data['collect_trade_amount'] = collect_trade_amount  
+
+    update.message.reply_text("Trade details saved. Ready to trade!")
+    return ConversationHandler.END
+
+def cancel(update: Update, context: CallbackContext) -> int:
+    update.message.reply_text('Trade cancelled.')
+    return ConversationHandler.END
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -441,11 +536,20 @@ def run_continuously(interval=1):
     continuous_thread = SchedulerThread()
     continuous_thread.start()
 
+
+
+
+
+
+
+
+
+
+
 def main():
     updater = Updater(token=token_telegram, use_context=True)
     print('Bot start...')
 
-    updater.start_polling()
     dp = updater.dispatcher
 
     dp.add_handler(CommandHandler("start", start))
@@ -458,7 +562,6 @@ def main():
     dp.add_handler(CommandHandler("daily_data", daily_data, pass_args=True))
     dp.add_handler(CommandHandler("check_quick_price", check_quick_price))
 
-    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, generic_text_handler))
 
     dp.add_handler(CommandHandler("market_status", market_status))
 
@@ -466,6 +569,24 @@ def main():
     dp.add_handler(CommandHandler('subscribe', subscribe))
     dp.add_handler(CommandHandler('unsubscribe', unsubscribe))
     dp.add_handler(CommandHandler('csc', check_subscriber_count))
+
+
+    # dp.add_handler(CallbackQueryHandler(trade_now, pattern='^trade_now$'))
+    trade_conv_handler = ConversationHandler(
+    entry_points=[CommandHandler('trade_now', trade_now)],
+    states={
+        FIRST: [MessageHandler(Filters.text & ~Filters.command, collect_api_key)],
+        SECOND: [MessageHandler(Filters.text & ~Filters.command, collect_api_secret)],
+        THIRD: [MessageHandler(Filters.text & ~Filters.command, collect_product_id)],
+        FOURTH: [MessageHandler(Filters.text & ~Filters.command, collect_trade_amount)],
+    },
+    fallbacks=[CommandHandler('cancel', cancel)],
+    )
+
+    dp.add_handler(trade_conv_handler)
+
+    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, generic_text_handler))
+
 
     bot_instance = updater.bot
     crypto_compare_api_key = os.getenv('CRYPTO_COMPARE_API')
