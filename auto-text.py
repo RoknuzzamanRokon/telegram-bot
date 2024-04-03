@@ -390,46 +390,42 @@ def check_subscription(chat_id) -> bool:
 FIRST, SECOND, THIRD, FOURTH = range(4)
 
 def trade_now(update: Update, context: CallbackContext) -> int:
-    # Check if it's called from a button press (callback query)
     if update.callback_query:
         query = update.callback_query
         query.answer()
         chat_id = query.message.chat_id
-        # Edit the message if it's from a callback query
         query.edit_message_text(text="Give api key:")
     else:
-        # If not from a callback query, assume it's from a command or direct message
         chat_id = update.message.chat_id
-        # Send a new message instead of editing
-        context.bot.sendMessage(chat_id=chat_id, text="Give api key:")
+        context.bot.sendMessage(chat_id=chat_id, text="Api key information.\n\n\nGive your coinbase api key.\n\nFormat like:👇👇\n nN1NfsuJu7Ols9Xd21C\n\n\n📒📒Note📒📒\nMake sure your information is right.")
     return FIRST
 
 def collect_api_key(update: Update, context: CallbackContext) -> int:
     collect_api_key = update.message.text
     context.user_data['collect_api_key'] = collect_api_key
 
-    update.message.reply_text("Give api secret.")
+    update.message.reply_text("Api secret information.\n\n\nGive your coinbase api secret.\n\nFormat like:👇👇\n B5NG4zhyhfgnmxPDs8YefdZB4gnaDcPyrBd\n\n\n📒📒Note📒📒\nMake sure your information is right.")
     return SECOND
 
 def collect_api_secret(update: Update, context: CallbackContext) -> int:
     collect_api_secret = update.message.text
     context.user_data['collect_api_secret'] = collect_api_secret
 
-    update.message.reply_text('Give your product key pair.')
+    update.message.reply_text('Give your product key pair.\n\n\nYour product key pair.\n\nFormat like:👇👇\nBTC-USDT\nBTC-USDC\nBUC-EUR\n\n\n📒📒Note📒📒\nMake sure your information is right.')
     return THIRD
 
 def collect_product_id(update: Update, context: CallbackContext) -> int:
     collect_product_id = update.message.text
     context.user_data['collect_product_id'] = collect_product_id 
 
-    update.message.reply_text("How much would you like to trade?")
+    update.message.reply_text("How much would you like to trade?\n\nFormat like:👇👇\n5\n10\n12\n15\n20\n\n\n📒📒Note📒📒\nMake sure your information is right.")
     return  FOURTH
 
 def collect_trade_amount(update: Update, context: CallbackContext) -> int:
     collect_trade_amount = update.message.text
     context.user_data['collect_trade_amount'] = collect_trade_amount  
 
-    update.message.reply_text("Trade details saved. Ready to trade!")
+    update.message.reply_text("🥰🥰🥰Thank you for providing information.🥰🥰🥰\n🥳🥳Trade details are saved. \n\n🤩🤩Ready for auto trade. \n🤫Please Wait for auto Trade buy sell signal.")
     return ConversationHandler.END
 
 def cancel(update: Update, context: CallbackContext) -> int:
