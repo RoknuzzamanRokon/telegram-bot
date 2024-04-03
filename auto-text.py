@@ -382,7 +382,8 @@ def check_subscription(chat_id) -> bool:
 
 
 
-FIRST, SECOND = range(2)
+FIRST, SECOND, THIRD, FOURTH = range(4)
+
 def trade_now(update: Update, context: CallbackContext) -> int:
     # Check if it's called from a button press (callback query)
     if update.callback_query:
@@ -398,17 +399,31 @@ def trade_now(update: Update, context: CallbackContext) -> int:
         context.bot.sendMessage(chat_id=chat_id, text="Give api key:")
     return FIRST
 
+def collect_api_key(update: Update, context: CallbackContext) -> int:
+    collect_api_key = update.message.text
+    context.user_data['collect_api_key'] = collect_api_key
 
-
-def collect_product_id(update: Update, context: CallbackContext) -> int:
-    product_id = update.message.text
-    context.user_data['product_id'] = product_id  # Store product ID for later use
-    update.message.reply_text("How much would you like to trade?")
+    update.message.reply_text("Give api secret.")
     return SECOND
 
+def collect_api_secret(update: Update, context: CallbackContext) -> int:
+    collect_api_secret = update.message.text
+    context.user_data['collect_api_secret'] = collect_api_secret
+
+    update.message.reply_text('Give your product key pair.')
+    return THIRD
+
+def collect_product_id(update: Update, context: CallbackContext) -> int:
+    collect_product_id = update.message.text
+    context.user_data['collect_product_id'] = collect_product_id 
+
+    update.message.reply_text("How much would you like to trade?")
+    return  FOURTH
+
 def collect_trade_amount(update: Update, context: CallbackContext) -> int:
-    trade_amount = update.message.text
-    context.user_data['trade_amount'] = trade_amount  # Store trade amount
+    collect_trade_amount = update.message.text
+    context.user_data['collect_trade_amount'] = collect_trade_amount  
+
     update.message.reply_text("Trade details saved. Ready to trade!")
     return ConversationHandler.END
 
@@ -526,21 +541,6 @@ def run_continuously(interval=1):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def main():
     updater = Updater(token=token_telegram, use_context=True)
     print('Bot start...')
@@ -570,8 +570,10 @@ def main():
     trade_conv_handler = ConversationHandler(
     entry_points=[CommandHandler('trade_now', trade_now)],
     states={
-        FIRST: [MessageHandler(Filters.text & ~Filters.command, collect_product_id)],
-        SECOND: [MessageHandler(Filters.text & ~Filters.command, collect_trade_amount)],
+        FIRST: [MessageHandler(Filters.text & ~Filters.command, collect_api_key)],
+        SECOND: [MessageHandler(Filters.text & ~Filters.command, collect_api_secret)],
+        THIRD: [MessageHandler(Filters.text & ~Filters.command, collect_product_id)],
+        FOURTH: [MessageHandler(Filters.text & ~Filters.command, collect_trade_amount)],
     },
     fallbacks=[CommandHandler('cancel', cancel)],
     )
