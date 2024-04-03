@@ -241,14 +241,14 @@ Market Cap (USD): {data.get('6. market cap (USD)', 'N/A')}
 def home(update: Update, context: CallbackContext) -> None:
     keyboard = [
         [InlineKeyboardButton("Trade", callback_data='trade'),
-         InlineKeyboardButton("Check Price", callback_data='price')],
-        [InlineKeyboardButton("Daily Data", callback_data='daily_data'),
-         InlineKeyboardButton("Market Status", callback_data='market_status')],
-         [InlineKeyboardButton("Help", callback_data='help')],
-         [InlineKeyboardButton("trade now", callback_data='trade_now')],
-         [InlineKeyboardButton("Connect Admin", url='https://t.me/Rokon017399?text=👋+Hello')],
-        [InlineKeyboardButton("Subscribe", callback_data='subscribe'),
-         InlineKeyboardButton("Unsubscribe", callback_data='unsubscribe')]
+         InlineKeyboardButton("💲Check Price💲", callback_data='price')],
+        [InlineKeyboardButton("📋Daily Data📋", callback_data='daily_data'),
+         InlineKeyboardButton("💹Market Status💹", callback_data='market_status')],
+         [InlineKeyboardButton("🙋‍♂️Help🙋‍♂️", callback_data='help')],
+         [InlineKeyboardButton("⚡trading bot⚡", callback_data='trade_now')],
+         [InlineKeyboardButton("💮Connect Admin💮", url='https://t.me/Rokon017399?text=👋+Hello')],
+        [InlineKeyboardButton("🥰Subscribe🥰", callback_data='subscribe'),
+         InlineKeyboardButton("☹️Unsubscribe☹️", callback_data='unsubscribe')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     update.message.reply_text('Please choose an action:', reply_markup=reply_markup)
@@ -397,21 +397,21 @@ def trade_now(update: Update, context: CallbackContext) -> int:
         query.edit_message_text(text="Give api key:")
     else:
         chat_id = update.message.chat_id
-        context.bot.sendMessage(chat_id=chat_id, text="Api key information.\n\n\nGive your coinbase api key.\n\nFormat like:👇👇\n nN1NfsuJu7Ols9Xd21C\n\n\n📒📒Note📒📒\nMake sure your information is right.")
+        context.bot.sendMessage(chat_id=chat_id, text="Api key information.\n\n\n👉👉👉Give your coinbase api key.\n\nFormat like:👇👇\n nN1NfsuJu7Ols9Xd21C\n\n\n📒📒Note📒📒\nMake sure your information is right.")
     return FIRST
 
 def collect_api_key(update: Update, context: CallbackContext) -> int:
     collect_api_key = update.message.text
     context.user_data['collect_api_key'] = collect_api_key
 
-    update.message.reply_text("Api secret information.\n\n\nGive your coinbase api secret.\n\nFormat like:👇👇\n B5NG4zhyhfgnmxPDs8YefdZB4gnaDcPyrBd\n\n\n📒📒Note📒📒\nMake sure your information is right.")
+    update.message.reply_text("Api secret information.\n\n\n👉👉👉Give your coinbase api secret.\n\nFormat like:👇👇\n B5NG4zhyhfgnmxPDs8YefdZB4gnaDcPyrBd\n\n\n📒📒Note📒📒\nMake sure your information is right.")
     return SECOND
 
 def collect_api_secret(update: Update, context: CallbackContext) -> int:
     collect_api_secret = update.message.text
     context.user_data['collect_api_secret'] = collect_api_secret
 
-    update.message.reply_text('Give your product key pair.\n\n\nYour product key pair.\n\nFormat like:👇👇\nBTC-USDT\nBTC-USDC\nBUC-EUR\n\n\n📒📒Note📒📒\nMake sure your information is right.')
+    update.message.reply_text('Give your product key pair.\n\n\n👉👉👉Your product key pair.\n\nFormat like:👇👇\nBTC-USDT\nBTC-USDC\nBUC-EUR\n\n\n📒📒Note📒📒\nMake sure your information is right.')
     return THIRD
 
 def collect_product_id(update: Update, context: CallbackContext) -> int:
@@ -425,7 +425,7 @@ def collect_trade_amount(update: Update, context: CallbackContext) -> int:
     collect_trade_amount = update.message.text
     context.user_data['collect_trade_amount'] = collect_trade_amount  
 
-    update.message.reply_text("🥰🥰🥰Thank you for providing information.🥰🥰🥰\n🥳🥳Trade details are saved. \n\n🤩🤩Ready for auto trade. \n🤫Please Wait for auto Trade buy sell signal.")
+    update.message.reply_text("🥰🥰🥰Thank you for providing information.🥰🥰🥰\n🥳🥳Trade details are saved. \n\n🤩🤩Ready for auto trade. \n🤫Please Wait for auto Trade,WHen get buy sell signal then place order automatically.")
     return ConversationHandler.END
 
 def cancel(update: Update, context: CallbackContext) -> int:
