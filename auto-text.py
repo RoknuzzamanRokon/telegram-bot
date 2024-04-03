@@ -239,20 +239,25 @@ Market Cap (USD): {data.get('6. market cap (USD)', 'N/A')}
 
 
 def home(update: Update, context: CallbackContext) -> None:
+    chat_id = update.message.chat_id
+    caption = ('*Welcome to Narutoe AI Bot*\n\nPlease choose an action.\n\n'
+               'If you subscribe to our bot, then we send update market news and trade signal functionality. '
+               'Subscribe first\n\n🥰🥰Thank you🥰🥰')
     keyboard = [
         [InlineKeyboardButton("Trade", callback_data='trade'),
-         InlineKeyboardButton("Check Price", callback_data='price')],
-        [InlineKeyboardButton("Daily Data", callback_data='daily_data'),
-         InlineKeyboardButton("Market Status", callback_data='market_status')],
-         [InlineKeyboardButton("Help", callback_data='help')],
-         [InlineKeyboardButton("trade now", callback_data='trade_now')],
-         [InlineKeyboardButton("Connect Admin", url='https://t.me/Rokon017399?text=👋+Hello')],
-        [InlineKeyboardButton("Subscribe", callback_data='subscribe'),
-         InlineKeyboardButton("Unsubscribe", callback_data='unsubscribe')]
+         InlineKeyboardButton("💲Check Price💲", callback_data='price')],
+        [InlineKeyboardButton("📋Daily Data📋", callback_data='daily_data'),
+         InlineKeyboardButton("💹Market Status💹", callback_data='market_status')],
+         [InlineKeyboardButton("🙋‍♂️Help🙋‍♂️", callback_data='help')],
+         [InlineKeyboardButton("⚡trading bot⚡", callback_data='trade_now')],
+         [InlineKeyboardButton("💮Connect Admin💮", url='https://t.me/Rokon017399?text=👋+Hello')],
+        [InlineKeyboardButton("🥰Subscribe🥰", callback_data='subscribe'),
+         InlineKeyboardButton("☹️Unsubscribe☹️", callback_data='unsubscribe')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    update.message.reply_text('Please choose an action:', reply_markup=reply_markup)
-
+    # update.message.reply_text('Please choose an action.\n\n If you subscribe our bot then we send update market news and trade signal functionality.Subscribe first \n\n🥰🥰Thank you🥰🥰:', reply_markup=reply_markup)
+    with open('photo\photo_2024-04-04_00-35-37.jpg', 'rb') as photo_file:
+        context.bot.send_photo(chat_id=chat_id, photo=photo_file, caption=caption, parse_mode='Markdown', reply_markup=reply_markup)
 
 def button_click_handler(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
@@ -269,17 +274,26 @@ def button_click_handler(update: Update, context: CallbackContext) -> None:
         check_quick_price_button(update, context)
     elif query.data == 'daily_data':
         context.user_data['awaiting_data'] = True
-        context.bot.send_message(chat_id=chat_id, text="Please provide the symbol and market in the format: SYMBOL MARKET")
+        context.bot.send_message(chat_id=chat_id, text="""Please provide the symbol and market in the format:\n\n SYMBOL MARKET\n  💰💰 🌐🌐
+        BTC USDT\n
+        ETH USDT\n
+        LINK USDT\n
+        EOS USDT\n
+        BCH USDT\n
+        XRP USDT\n
+        LTC USDT\n
+        ADA USDT\n
+        XLM USDT""")
     elif query.data == 'market_status':
         context.user_data['awaiting_market_status'] = True
-        context.bot.send_message(chat_id=chat_id, text="Want to know about any region? Write any region name: \n\nRegion name:-👇👇👇👇\n👉👉'United States', 'Canada', 'United Kingdom', 'Germany', 'France', 'Spain', 'Portugal', 'Japan', 'India', 'Mainland China','Hong Kong','Brazil', 'Mexico','South Africa'.👈👈 \n\nWrite below 👇👇")
+        context.bot.send_message(chat_id=chat_id, text="Want to know about any region? Write any region name: \n\nRegion name:-👇👇👇👇\n👉👉'United States', 'Canada', 'United Kingdom', 'Germany', 'France', 'Spain', 'Portugal', 'Japan', 'India', 'Mainland China','Hong Kong','Brazil', 'Mexico','South Africa'.👈👈 \n\nWrite below 👇👇\nHong kong   👈👈👈like this")
     
     elif query.data == 'trade_now':
         if not check_subscription(chat_id):
-            context.bot.sendMessage(chat_id=chat_id, text="Please subscribe to initiate trades.")
+            context.bot.sendMessage(chat_id=chat_id, text="You are not subscriber🙁🙁\n\nPlease subscribe to initiate trades..Go to \home page and Press 🥰Subscribe🥰 button and try again\n.")
         else:
             # Instruct the user on what to do next to start the conversation
-            context.bot.sendMessage(chat_id=chat_id, text="Please type '/trade_now' to start trading.")
+            context.bot.sendMessage(chat_id=chat_id, text="Please type /trade_now to start trading.\n\nor press this 👉👉👉👉👉'/trade_now' ")
    
     elif query.data == 'help':
         help(update, context)
@@ -311,7 +325,7 @@ def get_market_status(api_key):
 
 def market_status(update: Update, context: CallbackContext) -> None:
     context.user_data['awaiting_market_status'] = True
-    update.message.reply_text("Want to know about any region? Write any region name: \n\n Regin name:-👇👇👇👇\n👉👉'United States', 'Canada', 'United Kingdom', 'Germany', 'France', 'Spain', 'Portugal', 'Japan', 'India', 'Mainland China','Hong Kong','Brazil', 'Mexico','South Africa'.👈👈 \n\nWrite below 👇👇", reply_markup=ForceReply(selective=True))
+    update.message.reply_text("Want to know about any region? Write any region name: \n\n Regin name:-👇👇👇👇\n👉👉'United States', 'Canada', 'United Kingdom', 'Germany', 'France', 'Spain', 'Portugal', 'Japan', 'India', 'Mainland China','Hong Kong','Brazil', 'Mexico','South Africa'.👈👈 \n\nWrite below 👇👇\nHong kong   👈👈👈like this.", reply_markup=ForceReply(selective=True))
 
 def market_status_handle_response(update: Update, context: CallbackContext) -> None:
     user_response = update.message.text
@@ -356,15 +370,15 @@ print(user_chat_ids)
 def subscribe(update, context):
     user_chat_id = update.effective_chat.id
     user_chat_ids.add(user_chat_id) 
-    context.bot.send_message(chat_id=user_chat_id, text="Welcome!🤝🤝 You're now subscribed to Narutoe AI Bot🥳🥳🥳🥳.")
+    context.bot.send_message(chat_id=user_chat_id, text="🤝🤝Welcome!🤝🤝\n\n You're now subscribed to Narutoe AI Bot🥳🥳🥳🥳\n\nGo to /home page or /start again.")
 
 def unsubscribe(update, context):
     user_chat_id = update.effective_chat.id
     if user_chat_id in user_chat_ids:
         user_chat_ids.remove(user_chat_id)  
-        context.bot.send_message(chat_id=user_chat_id, text="You have unsubscribed from crypto news updates.")
+        context.bot.send_message(chat_id=user_chat_id, text="You have 🙁unsubscribed🙁 from Narutoe AI Bot.\n\nBack to the /home page.")
     else:
-        context.bot.send_message(chat_id=user_chat_id, text="You are not subscribed.")
+        context.bot.send_message(chat_id=user_chat_id, text="You are not subscribed🙁🙁🙁.")
 
 def check_subscriber_count(update, context):
     ADMIN_CHAT_ID = os.getenv('CHAT_ID')
@@ -374,7 +388,7 @@ def check_subscriber_count(update, context):
         subscriber_count = len(user_chat_ids)
         context.bot.send_message(chat_id=user_chat_id, text=f"Current subscriber count: {subscriber_count}")
     else:
-        context.bot.send_message(chat_id=user_chat_id, text="You are not authorized to use this command.")
+        context.bot.send_message(chat_id=user_chat_id, text="You are not authorized to use this command.🙁🙁")
 
 
 def check_subscription(chat_id) -> bool:
@@ -390,46 +404,42 @@ def check_subscription(chat_id) -> bool:
 FIRST, SECOND, THIRD, FOURTH = range(4)
 
 def trade_now(update: Update, context: CallbackContext) -> int:
-    # Check if it's called from a button press (callback query)
     if update.callback_query:
         query = update.callback_query
         query.answer()
         chat_id = query.message.chat_id
-        # Edit the message if it's from a callback query
         query.edit_message_text(text="Give api key:")
     else:
-        # If not from a callback query, assume it's from a command or direct message
         chat_id = update.message.chat_id
-        # Send a new message instead of editing
-        context.bot.sendMessage(chat_id=chat_id, text="Give api key:")
+        context.bot.sendMessage(chat_id=chat_id, text="Api key information.\n\n\n👉👉👉Give your coinbase api key.\n\nFormat like:👇👇\n nN1NfsuJu7Ols9Xd21C\n\n\n📒📒Note📒📒\nMake sure your information is right.")
     return FIRST
 
 def collect_api_key(update: Update, context: CallbackContext) -> int:
     collect_api_key = update.message.text
     context.user_data['collect_api_key'] = collect_api_key
 
-    update.message.reply_text("Give api secret.")
+    update.message.reply_text("Api secret information.\n\n\n👉👉👉Give your coinbase api secret.\n\nFormat like:👇👇\n B5NG4zhyhfgnmxPDs8YefdZB4gnaDcPyrBd\n\n\n📒📒Note📒📒\nMake sure your information is right.")
     return SECOND
 
 def collect_api_secret(update: Update, context: CallbackContext) -> int:
     collect_api_secret = update.message.text
     context.user_data['collect_api_secret'] = collect_api_secret
 
-    update.message.reply_text('Give your product key pair.')
+    update.message.reply_text('Give your product key pair.\n\n\n👉👉👉Your product key pair.\n\nFormat like:👇👇\nBTC-USDT\nBTC-USDC\nBTC-EUR\n\n\n📒📒Note📒📒\nMake sure your information is right.')
     return THIRD
 
 def collect_product_id(update: Update, context: CallbackContext) -> int:
     collect_product_id = update.message.text
     context.user_data['collect_product_id'] = collect_product_id 
 
-    update.message.reply_text("How much would you like to trade?")
+    update.message.reply_text("How much would you like to trade?\n\nFormat like:👇👇\n5\n10\n12\n15\n20\n\n\n📒📒Note📒📒\nMake sure your information is right.")
     return  FOURTH
 
 def collect_trade_amount(update: Update, context: CallbackContext) -> int:
     collect_trade_amount = update.message.text
     context.user_data['collect_trade_amount'] = collect_trade_amount  
 
-    update.message.reply_text("Trade details saved. Ready to trade!")
+    update.message.reply_text("🥰🥰🥰Thank you for providing information.🥰🥰🥰\n🥳🥳Trade details are saved. \n\n🤩🤩Ready for auto trade. \n🤫Please Wait for auto Trade,WHen get buy sell signal then place order automatically.")
     return ConversationHandler.END
 
 def cancel(update: Update, context: CallbackContext) -> int:
@@ -472,7 +482,7 @@ last_sent_news_id = None
 
 def send_latest_crypto_news(bot, crypto_compare_api_key):
     global last_sent_news_id
-    latest_news = get_latest_crypto_news(crypto_compare_api_key)  # This function should return the JSON data shown above
+    latest_news = get_latest_crypto_news(crypto_compare_api_key) 
     
     if latest_news and latest_news != "No news found.":
         current_news_id = latest_news.get("id", "")
