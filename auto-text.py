@@ -13,8 +13,6 @@ import logging
 
 
 
-
-
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -273,13 +271,21 @@ def button_click_handler(update: Update, context: CallbackContext) -> None:
     elif query.data == 'market_status':
         context.user_data['awaiting_market_status'] = True
         context.bot.send_message(chat_id=chat_id, text="Want to know about any region? Write any region name: \n\nRegion name:-👇👇👇👇\n👉👉'United States', 'Canada', 'United Kingdom', 'Germany', 'France', 'Spain', 'Portugal', 'Japan', 'India', 'Mainland China','Hong Kong','Brazil', 'Mexico','South Africa'.👈👈 \n\nWrite below 👇👇")
+    
+    elif query.data == 'trade_now':
+        if not check_subscription(chat_id):
+            context.bot.sendMessage(chat_id=chat_id, text="Please subscribe to initiate trades.")
+        else:
+            # Instruct the user on what to do next to start the conversation
+            context.bot.sendMessage(chat_id=chat_id, text="Please type '/trade_now' to start trading.")
+   
     elif query.data == 'help':
         help(update, context)
 
 
 
 def help(update: Update, context: CallbackContext) -> None:
-    response_text = "If you want to get update news and trade signal then must subscribe.\n Subscribe now for click here 👉 /naru"
+    response_text = "If you want to get update news and trade signal then must subscribe.\n Subscribe now for click here 👉 /subscribe"
 
     if update.callback_query:
         context.bot.send_message(chat_id=update.callback_query.message.chat_id, text=response_text)
@@ -376,31 +382,39 @@ def check_subscription(chat_id) -> bool:
 
 
 
-
-
-
-
-
-
-
-
-
-FIRST, SECOND, THIRD, FOURTH = range(4)
-
+FIRST, SECOND = range(2)
 def trade_now(update: Update, context: CallbackContext) -> int:
-    print('clicks')
-    query = update.callback_query
-    chat_id = query.message.chat_id
-    if not check_subscription(chat_id):
-        query.edit_message_text(text="Please subscribe to use this feature.")
-        return ConversationHandler.END
-    query.answer()
-    query.edit_message_text(text="Give api key:")
+    # Check if it's called from a button press (callback query)
+    if update.callback_query:
+        query = update.callback_query
+        query.answer()
+        chat_id = query.message.chat_id
+        # Edit the message if it's from a callback query
+        query.edit_message_text(text="Give api key:")
+    else:
+        # If not from a callback query, assume it's from a command or direct message
+        chat_id = update.message.chat_id
+        # Send a new message instead of editing
+        context.bot.sendMessage(chat_id=chat_id, text="Give api key:")
     return FIRST
 
 
 
+def collect_product_id(update: Update, context: CallbackContext) -> int:
+    product_id = update.message.text
+    context.user_data['product_id'] = product_id  # Store product ID for later use
+    update.message.reply_text("How much would you like to trade?")
+    return SECOND
 
+def collect_trade_amount(update: Update, context: CallbackContext) -> int:
+    trade_amount = update.message.text
+    context.user_data['trade_amount'] = trade_amount  # Store trade amount
+    update.message.reply_text("Trade details saved. Ready to trade!")
+    return ConversationHandler.END
+
+def cancel(update: Update, context: CallbackContext) -> int:
+    update.message.reply_text('Trade cancelled.')
+    return ConversationHandler.END
 
 
 
@@ -543,7 +557,6 @@ def main():
     dp.add_handler(CommandHandler("daily_data", daily_data, pass_args=True))
     dp.add_handler(CommandHandler("check_quick_price", check_quick_price))
 
-    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, generic_text_handler))
 
     dp.add_handler(CommandHandler("market_status", market_status))
 
@@ -551,6 +564,22 @@ def main():
     dp.add_handler(CommandHandler('subscribe', subscribe))
     dp.add_handler(CommandHandler('unsubscribe', unsubscribe))
     dp.add_handler(CommandHandler('csc', check_subscriber_count))
+
+
+    # dp.add_handler(CallbackQueryHandler(trade_now, pattern='^trade_now$'))
+    trade_conv_handler = ConversationHandler(
+    entry_points=[CommandHandler('trade_now', trade_now)],
+    states={
+        FIRST: [MessageHandler(Filters.text & ~Filters.command, collect_product_id)],
+        SECOND: [MessageHandler(Filters.text & ~Filters.command, collect_trade_amount)],
+    },
+    fallbacks=[CommandHandler('cancel', cancel)],
+    )
+
+    dp.add_handler(trade_conv_handler)
+
+    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, generic_text_handler))
+
 
     bot_instance = updater.bot
     crypto_compare_api_key = os.getenv('CRYPTO_COMPARE_API')
