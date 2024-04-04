@@ -51,40 +51,41 @@ def start(update: Update, context: CallbackContext) -> None:
     with open('photo\\photo_2024-04-04_00-37-22.jpg', 'rb') as photo_file:
         context.bot.send_photo(chat_id=chat_id, photo=photo_file, parse_mode='HTML', caption=caption)
 
-def trade(update: Update, context: CallbackContext) -> None:
-    coin_symbol = 'BTC'
-    coin_base_api_key = os.getenv('CRYPTO_COMPARE_API') 
-    window_size = 15
 
-    # Fetch the last 60 closing prices
-    closing_prices = get_last_60_closing_prices(coin_symbol, coin_base_api_key)
-    if not closing_prices or isinstance(closing_prices, str): 
-        response_text = "Failed to fetch closing prices."
-        update.message.reply_text(response_text)
+def trade(update: Update, context: CallbackContext) -> None:
+    user_chat_id = update.effective_chat.id if update.effective_chat else update.callback_query.message.chat_id
+
+    if not check_subscription(user_chat_id):
+        response_text = "You need to subscribe first."
+        context.bot.send_message(chat_id=user_chat_id, text=response_text)
         return
 
-    # Calculate the RSI value
-    rsi_value = calculate_rsi(closing_prices, window_size)
+    coin_symbol = 'BTC'
+    coin_base_api_key = os.getenv('COIN_BASE_API_KEY')
+    window_size = 15
 
-    # Get the current price of the coin
+    closing_prices = get_last_60_closing_prices(coin_symbol, coin_base_api_key)
+    if not closing_prices or isinstance(closing_prices, str):
+        response_text = "Failed to fetch closing prices."
+        context.bot.send_message(chat_id=user_chat_id, text=response_text)
+        return
+
+    rsi_value = calculate_rsi(closing_prices, window_size)
     current_price = get_current_price(coin_symbol)
     if current_price is None:
         response_text = "Failed to fetch the current price."
-        update.message.reply_text(response_text)
+        context.bot.send_message(chat_id=user_chat_id, text=response_text)
         return
 
-    # Determine the action based on RSI value
     if rsi_value < 30:
-        action = 'Buy signal detected. 📈\n\nCurrent {coin_symbol} price is {current_price} USD.\nRSI value is : {round(rsi_value,2)}'
+        action = f'Buy signal detected. 📈\n\nCurrent {coin_symbol} price is {current_price} USD.\nRSI value is: {round(rsi_value,2)}'
     elif rsi_value > 70:
-        action = f'Sell signal detected. 📉\n\nCurrent {coin_symbol} price is {current_price} USD.\nRSI value is : {round(rsi_value,2)}'
+        action = f'Sell signal detected. 📉\n\nCurrent {coin_symbol} price is {current_price} USD.\nRSI value is: {round(rsi_value,2)}'
     else:
-        action = f'📈📈Witting for Buy sell Signal📉📉.\n\nCurrent {coin_symbol} price is {current_price} USD.\nRSI value is : {round(rsi_value,2)}'
+        action = f'Waiting for Buy/Sell Signal. 📈📉\n\nCurrent {coin_symbol} price is {current_price} USD.\nRSI value is: {round(rsi_value,2)}'
 
-    if update.callback_query:
-        context.bot.send_message(chat_id=update.callback_query.message.chat_id, text=action)
-    else:
-        update.message.reply_text(action)
+    context.bot.send_message(chat_id=user_chat_id, text=action)
+
 
 
 
@@ -261,7 +262,6 @@ def home(update: Update, context: CallbackContext) -> None:
          InlineKeyboardButton("☹️Unsubscribe☹️", callback_data='unsubscribe')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    # update.message.reply_text('Please choose an action.\n\n If you subscribe our bot then we send update market news and trade signal functionality.Subscribe first \n\n🥰🥰Thank you🥰🥰:', reply_markup=reply_markup)
     with open('photo\photo_2024-04-04_00-35-37.jpg', 'rb') as photo_file:
         context.bot.send_photo(chat_id=chat_id, photo=photo_file, caption=caption, parse_mode='Markdown', reply_markup=reply_markup)
 
@@ -293,9 +293,14 @@ def button_click_handler(update: Update, context: CallbackContext) -> None:
         context.user_data['awaiting_market_status'] = True
         context.bot.send_message(chat_id=chat_id, text="Want to know about any region? Write any region name: \n\nRegion name:-👇👇👇👇\n👉👉'United States', 'Canada', 'United Kingdom', 'Germany', 'France', 'Spain', 'Portugal', 'Japan', 'India', 'Mainland China','Hong Kong','Brazil', 'Mexico','South Africa'.👈👈 \n\nWrite below 👇👇\nHong kong   👈👈👈like this")
     
+    elif query.data in ['BTC-USD','BTC-USDC','BTC-USDT','SOL-USD','SOL-USDC','SOL-USDT','BNB-USD','BNB-USDC','BNB-USDT']:
+        collect_product_id(update, context)
+    elif query.data in ['5', '10', '15', '20', '25', '30', '35', '40', '45', '50']:
+        collect_trade_amount(update, context)    
+    
     elif query.data == 'trade_now':
         if not check_subscription(chat_id):
-            context.bot.sendMessage(chat_id=chat_id, text="You are not subscriber🙁🙁\n\nPlease subscribe to initiate trades..Go to \home page and Press 🥰Subscribe🥰 button and try again\n.")
+            context.bot.sendMessage(chat_id=chat_id, text="You are not subscriber🙁🙁\n\nPlease subscribe to initiate trades..Go to /home page and Press 🥰Subscribe🥰 button and try again.")
         else:
             # Instruct the user on what to do next to start the conversation
             context.bot.sendMessage(chat_id=chat_id, text="Please type /trade_now to start trading.\n\nor press this 👉👉👉👉👉'/trade_now' ")
@@ -370,12 +375,15 @@ def generic_text_handler(update: Update, context: CallbackContext) -> None:
 
 # Global set to store unique chat IDs
 user_chat_ids = set()
-print(user_chat_ids)
+
 
 def subscribe(update, context):
     user_chat_id = update.effective_chat.id
-    user_chat_ids.add(user_chat_id) 
-    context.bot.send_message(chat_id=user_chat_id, text="🤝🤝Welcome!🤝🤝\n\n You're now subscribed to Narutoe AI Bot🥳🥳🥳🥳\n\nGo to /home page or /start again.")
+    if check_subscription(user_chat_id):
+        context.bot.send_message(chat_id=user_chat_id, text="You are already subscribed.👀")
+    else:
+        user_chat_ids.add(user_chat_id) 
+        context.bot.send_message(chat_id=user_chat_id, text="🤝🤝Welcome!🤝🤝\n\n You're now subscribed to Narutoe AI Bot🥳🥳🥳🥳\n\nGo to /home page and enjoy🤝🤝 our subscriber service.")
 
 def unsubscribe(update, context):
     user_chat_id = update.effective_chat.id
@@ -405,6 +413,9 @@ def check_subscription(chat_id) -> bool:
 
 
 
+
+
+
 global_user_data = {}
 FIRST, SECOND, THIRD, FOURTH = range(4)
 
@@ -416,44 +427,111 @@ def trade_now(update: Update, context: CallbackContext) -> int:
         query.edit_message_text(text="Give api key:")
     else:
         chat_id = update.message.chat_id
-        context.bot.sendMessage(chat_id=chat_id, text="Api key information.\n\n\n👉👉👉Give your coinbase api key.\n\nFormat like:👇👇\n nN1NfsuJu7Ols9Xd21C\n\n\n📒📒Note📒📒\nMake sure your information is right.")
+        context.bot.sendMessage(chat_id=chat_id,
+                                text="*Api key information*\n\n\n👉👉👉Give your coinbase api key.\n\nFormat like:👇👇\n nN1NfsuJu7Ols9Xd21C\n\n\n📒📒NOTE📒📒\nMake sure your information is right\n\nIf you cancel this section.Click here 👉👉👉 /cancel.", 
+                                parse_mode='Markdown')
     return FIRST
 
 def collect_api_key(update: Update, context: CallbackContext) -> int:
     collect_api_key = update.message.text
+    chat_id = update.message.chat_id
     context.user_data['collect_api_key'] = collect_api_key
+    global_user_data[chat_id] = context.user_data 
 
-    update.message.reply_text("Api secret information.\n\n\n👉👉👉Give your coinbase api secret.\n\nFormat like:👇👇\n B5NG4zhyhfgnmxPDs8YefdZB4gnaDcPyrBd\n\n\n📒📒Note📒📒\nMake sure your information is right.")
+    update.message.reply_text("*Api secret information*\n\n\n👉👉👉Give your coinbase api secret.\n\nFormat like:👇👇\n B5NG4zhyhfgnmxPDs8YefdZB4gnaDcPyrBd\n\n\n📒📒NOTE📒📒\nMake sure your information is right\n\nIf you cancel this section.Click here 👉👉👉 /cancel.", parse_mode='Markdown')
     return SECOND
+
 
 def collect_api_secret(update: Update, context: CallbackContext) -> int:
     collect_api_secret = update.message.text
+    chat_id = update.callback_query.message.chat_id if update.callback_query else update.message.chat_id
+    # chat_id = update.message.chat_id
+
     context.user_data['collect_api_secret'] = collect_api_secret
-
-    update.message.reply_text('Give your product key pair.\n\n\n👉👉👉Your product key pair.\n\nFormat like:👇👇\nBTC-USDT\nBTC-USDC\nBTC-EUR\n\n\n📒📒Note📒📒\nMake sure your information is right.')
-    return THIRD
-
-def collect_product_id(update: Update, context: CallbackContext) -> int:
-    collect_product_id = update.message.text
-    context.user_data['collect_product_id'] = collect_product_id 
-
-    update.message.reply_text("How much would you like to trade?\n\nFormat like:👇👇\n5\n10\n12\n15\n20\n\n\n📒📒Note📒📒\nMake sure your information is right.")
-    return  FOURTH
-
-def collect_trade_amount(update: Update, context: CallbackContext) -> int:
-    collect_trade_amount = update.message.text
-    chat_id = update.message.chat_id
-
-    context.user_data['collect_trade_amount'] = collect_trade_amount  
-
-
     global_user_data[chat_id] = context.user_data
 
-    update.message.reply_text("🥰🥰🥰Thank you for providing information.🥰🥰🥰\n🥳🥳Trade details are saved. \n\n🤩🤩Ready for auto trade. \n🤫Please Wait for auto Trade,WHen get buy sell signal then place order automatically.")
-    return ConversationHandler.END
+    keyboard = [
+        [InlineKeyboardButton('BTC-USD', callback_data='BTC-USD'), InlineKeyboardButton('BTC-USDC', callback_data='BTC-USDC'),InlineKeyboardButton('BTC-USDT', callback_data='BTC-USDT')],
+        [InlineKeyboardButton('SOL-USD', callback_data='SOL-USD'), InlineKeyboardButton('SOL-USDC', callback_data='SOL-USDC'),InlineKeyboardButton('SOL-USDT', callback_data='SOL-USDT')],
+        [InlineKeyboardButton('BNB-USD', callback_data='BNB-USD'), InlineKeyboardButton('BNB-USDC', callback_data='BNB-USDC'),InlineKeyboardButton('BNB-USDT', callback_data='BNB-USDT')],
+    ] 
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    if update.callback_query:
+        context.bot.send_message(chat_id=chat_id, text='Choose your product key pair\n\n👇👇👇👇👇👇👇👇👇👇👇👇', parse_mode='Markdown', reply_markup=reply_markup)
+    else:
+        update.message.reply_text('*Choose your product key pair*\n\n👇👇👇👇👇👇👇👇👇👇👇👇', parse_mode='Markdown', reply_markup=reply_markup)
+
+
+    # update.message.reply_text('Give your product key pair.\n\n\n👉👉👉Your product key pair.\n\nFormat like:👇👇\nBTC-USDT\nBTC-USDC\nBTC-EUR\nSOL-USDT\nSOL-USDC\n\n\n📒📒NOTE📒📒\nMake sure your information is right\n\nIf you cancel this section.Click here 👉👉👉 /cancel.')
+    return THIRD
+
+
+
+
+
+def collect_product_id(update: Update, context: CallbackContext) -> int:
+    if update.callback_query:
+        chat_id = update.callback_query.message.chat_id
+        collect_product_id = update.callback_query.data
+        update.callback_query.answer()
+        
+        context.user_data['collect_product_id'] = collect_product_id
+        global_user_data[chat_id] = context.user_data 
+
+    # collect_product_id = update.message.text
+    # chat_id = update.callback_query.message.chat_id if update.callback_query else update.message.chat_id
+
+    # context.user_data['collect_product_id'] = collect_product_id 
+    # global_user_data[chat_id] = context.user_data 
+
+
+    keyboard = [
+        [InlineKeyboardButton("5$", callback_data = '5'), InlineKeyboardButton("10$", callback_data='10'), InlineKeyboardButton("15$", callback_data='15')],
+        [InlineKeyboardButton("20$", callback_data = '20'), InlineKeyboardButton("25$", callback_data='25'), InlineKeyboardButton("30$", callback_data='30')],
+        [InlineKeyboardButton("40$", callback_data = '40'), InlineKeyboardButton("45$", callback_data='45'), InlineKeyboardButton("50$", callback_data='50')],
+    ]
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    if update.callback_query:
+        context.bot.send_message(chat_id=chat_id, text='<b>How much would you like to trade?</b> \n\n Please Choose:',parse_mode='HTML', reply_markup=reply_markup)
+    else:
+        update.message.reply_text('How much would you like to trade? \n\n Please Choose:',parse_mode='Markdown', reply_markup=reply_markup)
+    return  FOURTH
+       
+
+
+
+def collect_trade_amount(update: Update, context: CallbackContext) -> None:
+    if update.callback_query:
+        chat_id = update.callback_query.message.chat_id
+        selected_amount = update.callback_query.data
+        update.callback_query.answer()
+
+        context.user_data['collect_trade_amount'] = selected_amount 
+        message = ("🥰🥰🥰Thank you for providing information.🥰🥰🥰\n🥳🥳Trade details are saved. \n\n🤩🤩Ready for auto trade. \n🤫Please Wait for auto Trade,WHen get buy sell signal then place order automatically.\n\n Home page for click here👉👉👉/home")
+        
+        
+        for chat_id, user_data in global_user_data.items():
+            api_key = user_data['collect_api_key']
+            api_secret = user_data['collect_api_secret']
+            product_id = user_data['collect_product_id']
+            btc_size = user_data['collect_trade_amount']
+            print(api_key)
+            print(api_secret)
+            print(product_id)
+            print(btc_size)
+
+        context.bot.send_message(chat_id=chat_id, text=message)
+        return ConversationHandler.END
+    else:
+        chat_id = update.message.chat_id
+        text = update.message.text
+        context.bot.send_message(chat_id=chat_id, text="Processing your input...")
+        return ConversationHandler.END
+
 
 def cancel(update: Update, context: CallbackContext) -> int:
-    update.message.reply_text('Trade cancelled.')
+    update.message.reply_text('Trade cancelled.If you try again auto trading click here👉👉👉 /home and press ⚡trading bot⚡ button again.')
     return ConversationHandler.END
 
 
@@ -522,12 +600,12 @@ def send_rsi_signals(bot):
     global buy_count, global_user_data
 
     for chat_id, user_data in global_user_data.items():
-        api_key = user_data['api_key']
-        api_secret = user_data['api_secret']
-        product_id = user_data['product_id']
-        btc_size = user_data['usd']
+        api_key = user_data['collect_api_key']
+        api_secret = user_data['collect_api_secret']
+        product_id = user_data['collect_product_id']
+        btc_size = user_data['collect_trade_amount']
 
-        coin_symbol = user_data['product_id'].split('-')[0].upper()
+        coin_symbol = user_data['collect_product_id'].split('-')[0].upper()
         coin_base_api_key = os.getenv('COIN_BASE_API_KEY')
         window_size = 15
 
@@ -602,7 +680,6 @@ def main():
     dp.add_handler(CommandHandler('csc', check_subscriber_count))
 
 
-    # dp.add_handler(CallbackQueryHandler(trade_now, pattern='^trade_now$'))
     trade_conv_handler = ConversationHandler(
     entry_points=[CommandHandler('trade_now', trade_now)],
     states={
@@ -622,7 +699,7 @@ def main():
     bot_instance = updater.bot
     crypto_compare_api_key = os.getenv('CRYPTO_COMPARE_API')
 
-    schedule.every(10).minutes.do(lambda: send_latest_crypto_news(bot=bot_instance, crypto_compare_api_key=crypto_compare_api_key))
+    schedule.every(20).minutes.do(lambda: send_latest_crypto_news(bot=bot_instance, crypto_compare_api_key=crypto_compare_api_key))
     schedule.every(3).minutes.do(lambda: send_rsi_signals(bot=bot_instance))
 
     threading.Thread(target=lambda: schedule.run_pending()).start()
@@ -630,7 +707,7 @@ def main():
     run_continuously()
 
     # Start the bot
-    updater.start_polling()
+    updater.start_polling(timeout=15, read_latency=4)
     updater.idle()
 
 if __name__ == '__main__':
