@@ -1,5 +1,7 @@
 from telegram.ext import Updater, CallbackContext, CommandHandler, MessageHandler, Filters, CallbackQueryHandler, ConversationHandler
 from telegram import Bot, Update, ForceReply, InlineKeyboardButton, InlineKeyboardMarkup
+from coinbase_advanced_trader.config import set_api_credentials
+from coinbase_advanced_trader.strategies.market_order_strategies import fiat_market_buy, fiat_market_sell
 import schedule
 import time
 import threading
@@ -29,7 +31,9 @@ coin_base_api_key = os.getenv('COIN_BASE_API_KEY')
 
 
 def start(update: Update, context: CallbackContext) -> None:
-    update.message.reply_text('Hello! I am your 🤖🤖trading bot🤖🤖. \n\n'
+    chat_id = update.message.chat_id
+
+    caption = ('<b>Hello! I am your 🤖🤖trading bot🤖🤖.</b> \n\n'
                               'Use /home and go to home page.\n\n'
                               'This section for manually use link'
                               'Use /trade to execute a mock trade.\n'
@@ -44,6 +48,8 @@ def start(update: Update, context: CallbackContext) -> None:
 
                               "NOTE:- If you subscribe then you get latest news from our channel.")
 
+    with open('photo\\photo_2024-04-04_00-37-22.jpg', 'rb') as photo_file:
+        context.bot.send_photo(chat_id=chat_id, photo=photo_file, parse_mode='HTML', caption=caption)
 
 def trade(update: Update, context: CallbackContext) -> None:
     coin_symbol = 'BTC'
@@ -263,7 +269,6 @@ def button_click_handler(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     query.answer()
 
-    # This line is the focus: accessing chat_id correctly depending on the type of update
     chat_id = query.message.chat_id if query else update.message.chat_id
 
     if query.data == 'trade':
@@ -400,7 +405,7 @@ def check_subscription(chat_id) -> bool:
 
 
 
-
+global_user_data = {}
 FIRST, SECOND, THIRD, FOURTH = range(4)
 
 def trade_now(update: Update, context: CallbackContext) -> int:
@@ -437,7 +442,12 @@ def collect_product_id(update: Update, context: CallbackContext) -> int:
 
 def collect_trade_amount(update: Update, context: CallbackContext) -> int:
     collect_trade_amount = update.message.text
+    chat_id = update.message.chat_id
+
     context.user_data['collect_trade_amount'] = collect_trade_amount  
+
+
+    global_user_data[chat_id] = context.user_data
 
     update.message.reply_text("🥰🥰🥰Thank you for providing information.🥰🥰🥰\n🥳🥳Trade details are saved. \n\n🤩🤩Ready for auto trade. \n🤫Please Wait for auto Trade,WHen get buy sell signal then place order automatically.")
     return ConversationHandler.END
@@ -506,33 +516,49 @@ def send_latest_crypto_news(bot, crypto_compare_api_key):
             last_sent_news_id = current_news_id
 
 
+
+buy_count = 0
 def send_rsi_signals(bot):
-    coin_symbol = 'BTC'
-    coin_base_api_key = os.getenv('CRYPTO_COMPARE_API') 
-    window_size = 15
-    closing_prices = get_last_60_closing_prices(coin_symbol, coin_base_api_key)
+    global buy_count, global_user_data
 
-    if not closing_prices or isinstance(closing_prices, str):
-        print("Failed to fetch closing prices for RSI calculation.")
-        return
+    for chat_id, user_data in global_user_data.items():
+        api_key = user_data['api_key']
+        api_secret = user_data['api_secret']
+        product_id = user_data['product_id']
+        btc_size = user_data['usd']
 
-    rsi_value = calculate_rsi(closing_prices, window_size)
-    current_price = get_current_price(coin_symbol)
+        coin_symbol = user_data['product_id'].split('-')[0].upper()
+        coin_base_api_key = os.getenv('COIN_BASE_API_KEY')
+        window_size = 15
 
-    if current_price is None:
-        print("Failed to fetch the current price for RSI signal.")
-        return
+        closing_prices = get_last_60_closing_prices(coin_symbol, coin_base_api_key)
 
-    if rsi_value < 30:
-        message = f"Buy signal detected for {coin_symbol}.\n 📈 Current price: ${current_price} USD.\n RSI value: {round(rsi_value,2)}"
-    elif rsi_value > 70:
-        message = f"Sell signal detected for {coin_symbol}.\n 📉 Current price: ${current_price} USD.\n RSI value: {round(rsi_value,2)}"
-    else:
-        return  
+        if not closing_prices or isinstance(closing_prices, str):
+            print("Failed to fetch closing prices for RSI calculation.")
+            continue
 
-    for chat_id in user_chat_ids:
-        bot.send_message(chat_id=chat_id, text=message)
+        rsi_value = calculate_rsi(closing_prices, window_size)
+        current_price = get_current_price(coin_symbol)
 
+        if current_price is None:
+            print("Failed to fetch the current price for RSI signal.")
+            continue
+
+        message = None
+        if rsi_value < 30 and buy_count == 0:
+            set_api_credentials(api_key, api_secret)
+            market_buy = fiat_market_buy(product_id, btc_size)
+            buy_count = 1
+            message = f'Buy order placed: {market_buy}\n\nRSI value: {rsi_value}'
+
+        elif rsi_value > 70 and buy_count == 1:
+            set_api_credentials(api_key, api_secret)
+            market_sell = fiat_market_sell(product_id, btc_size)
+            buy_count = 0
+            message = f'Sell order placed: {market_sell}\n\nRSI value: {rsi_value}'
+
+        if message:
+            bot.send_message(chat_id=chat_id, text=message)
 
 
 def run_continuously(interval=1):
@@ -545,11 +571,6 @@ def run_continuously(interval=1):
                 time.sleep(interval)
     continuous_thread = SchedulerThread()
     continuous_thread.start()
-
-
-
-
-
 
 
 
@@ -603,6 +624,8 @@ def main():
 
     schedule.every(10).minutes.do(lambda: send_latest_crypto_news(bot=bot_instance, crypto_compare_api_key=crypto_compare_api_key))
     schedule.every(3).minutes.do(lambda: send_rsi_signals(bot=bot_instance))
+
+    threading.Thread(target=lambda: schedule.run_pending()).start()
 
     run_continuously()
 
