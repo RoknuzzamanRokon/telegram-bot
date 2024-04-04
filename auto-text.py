@@ -292,7 +292,8 @@ def button_click_handler(update: Update, context: CallbackContext) -> None:
     elif query.data == 'market_status':
         context.user_data['awaiting_market_status'] = True
         context.bot.send_message(chat_id=chat_id, text="Want to know about any region? Write any region name: \n\nRegion name:-👇👇👇👇\n👉👉'United States', 'Canada', 'United Kingdom', 'Germany', 'France', 'Spain', 'Portugal', 'Japan', 'India', 'Mainland China','Hong Kong','Brazil', 'Mexico','South Africa'.👈👈 \n\nWrite below 👇👇\nHong kong   👈👈👈like this")
-    elif query.data in ['5', '10']:
+    
+    elif query.data in ['5', '10', '15', '20', '25', '30', '35', '40', '45', '50']:
         collect_trade_amount(update, context)    
     elif query.data == 'trade_now':
         if not check_subscription(chat_id):
@@ -462,7 +463,9 @@ def collect_product_id(update: Update, context: CallbackContext) -> None:
 
 
     keyboard = [
-        [InlineKeyboardButton("5$", callback_data = '5'), InlineKeyboardButton("10$", callback_data='10')]
+        [InlineKeyboardButton("5$", callback_data = '5'), InlineKeyboardButton("10$", callback_data='10'), InlineKeyboardButton("15$", callback_data='15')],
+        [InlineKeyboardButton("20$", callback_data = '20'), InlineKeyboardButton("25$", callback_data='25'), InlineKeyboardButton("30$", callback_data='30')],
+        [InlineKeyboardButton("40$", callback_data = '40'), InlineKeyboardButton("45$", callback_data='45'), InlineKeyboardButton("50$", callback_data='50')],
     ]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -485,15 +488,16 @@ def collect_trade_amount(update: Update, context: CallbackContext) -> None:
         message = ("🥰🥰🥰Thank you for providing information.🥰🥰🥰\n🥳🥳Trade details are saved. \n\n🤩🤩Ready for auto trade. \n🤫Please Wait for auto Trade,WHen get buy sell signal then place order automatically.")
         
         
-        for chat_id, user_data in global_user_data.items():
-            api_key = user_data['collect_api_key']
-            api_secret = user_data['collect_api_secret']
-            product_id = user_data['collect_product_id']
-            btc_size = user_data['collect_trade_amount']
-            print(api_key)
-            print(api_secret)
-            print(product_id)
-            print(btc_size)
+        # for chat_id, user_data in global_user_data.items():
+        #     api_key = user_data['collect_api_key']
+        #     api_secret = user_data['collect_api_secret']
+        #     product_id = user_data['collect_product_id']
+        #     btc_size = user_data['collect_trade_amount']
+        #     print(api_key)
+        #     print(api_secret)
+        #     print(product_id)
+        #     print(btc_size)
+
         context.bot.send_message(chat_id=chat_id, text=message)
         return ConversationHandler.END
     else:
@@ -659,7 +663,6 @@ def main():
         FIRST: [MessageHandler(Filters.text & ~Filters.command, collect_api_key)],
         SECOND: [MessageHandler(Filters.text & ~Filters.command, collect_api_secret)],
         THIRD: [MessageHandler(Filters.text & ~Filters.command, collect_product_id)],
-        # FOURTH: [MessageHandler(Filters.text & ~Filters.command, quick_select_coin)],
         FOURTH: [MessageHandler(Filters.text & ~Filters.command, collect_trade_amount)],
     },
     fallbacks=[CommandHandler('cancel', cancel)],
