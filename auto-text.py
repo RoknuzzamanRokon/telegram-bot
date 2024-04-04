@@ -293,8 +293,11 @@ def button_click_handler(update: Update, context: CallbackContext) -> None:
         context.user_data['awaiting_market_status'] = True
         context.bot.send_message(chat_id=chat_id, text="Want to know about any region? Write any region name: \n\nRegion name:-👇👇👇👇\n👉👉'United States', 'Canada', 'United Kingdom', 'Germany', 'France', 'Spain', 'Portugal', 'Japan', 'India', 'Mainland China','Hong Kong','Brazil', 'Mexico','South Africa'.👈👈 \n\nWrite below 👇👇\nHong kong   👈👈👈like this")
     
+    elif query.data in ['BTC-USD','BTC-USDC','BTC-USDT','SOL-USD','SOL-USDC','SOL-USDT','BNB-USD','BNB-USDC','BNB-USDT']:
+        collect_product_id(update, context)
     elif query.data in ['5', '10', '15', '20', '25', '30', '35', '40', '45', '50']:
         collect_trade_amount(update, context)    
+    
     elif query.data == 'trade_now':
         if not check_subscription(chat_id):
             context.bot.sendMessage(chat_id=chat_id, text="You are not subscriber🙁🙁\n\nPlease subscribe to initiate trades..Go to /home page and Press 🥰Subscribe🥰 button and try again.")
@@ -435,31 +438,51 @@ def collect_api_key(update: Update, context: CallbackContext) -> int:
     context.user_data['collect_api_key'] = collect_api_key
     global_user_data[chat_id] = context.user_data 
 
-    update.message.reply_text("*Api secret information*\n\n\n👉👉👉Give your coinbase api secret.\n\nFormat like:👇👇\n B5NG4zhyhfgnmxPDs8YefdZB4gnaDcPyrBd\n\n\n📒📒NOTE📒📒\nMake sure your information is right\n\nIf you cancel this section.Click here 👉👉👉 /cancel.")
+    update.message.reply_text("*Api secret information*\n\n\n👉👉👉Give your coinbase api secret.\n\nFormat like:👇👇\n B5NG4zhyhfgnmxPDs8YefdZB4gnaDcPyrBd\n\n\n📒📒NOTE📒📒\nMake sure your information is right\n\nIf you cancel this section.Click here 👉👉👉 /cancel.", parse_mode='Markdown')
     return SECOND
 
 
 def collect_api_secret(update: Update, context: CallbackContext) -> int:
     collect_api_secret = update.message.text
-    chat_id = update.message.chat_id
+    chat_id = update.callback_query.message.chat_id if update.callback_query else update.message.chat_id
+    # chat_id = update.message.chat_id
 
     context.user_data['collect_api_secret'] = collect_api_secret
-    global_user_data[chat_id] = context.user_data 
+    global_user_data[chat_id] = context.user_data
+
+    keyboard = [
+        [InlineKeyboardButton('BTC-USD', callback_data='BTC-USD'), InlineKeyboardButton('BTC-USDC', callback_data='BTC-USDC'),InlineKeyboardButton('BTC-USDT', callback_data='BTC-USDT')],
+        [InlineKeyboardButton('SOL-USD', callback_data='SOL-USD'), InlineKeyboardButton('SOL-USDC', callback_data='SOL-USDC'),InlineKeyboardButton('SOL-USDT', callback_data='SOL-USDT')],
+        [InlineKeyboardButton('BNB-USD', callback_data='BNB-USD'), InlineKeyboardButton('BNB-USDC', callback_data='BNB-USDC'),InlineKeyboardButton('BNB-USDT', callback_data='BNB-USDT')],
+    ] 
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    if update.callback_query:
+        context.bot.send_message(chat_id=chat_id, text='Choose your product key pair\n\n👇👇👇👇👇👇👇👇👇👇👇👇', parse_mode='Markdown', reply_markup=reply_markup)
+    else:
+        update.message.reply_text('*Choose your product key pair*\n\n👇👇👇👇👇👇👇👇👇👇👇👇', parse_mode='Markdown', reply_markup=reply_markup)
 
 
-    update.message.reply_text('Give your product key pair.\n\n\n👉👉👉Your product key pair.\n\nFormat like:👇👇\nBTC-USDT\nBTC-USDC\nBTC-EUR\nSOL-USDT\nSOL-USDC\n\n\n📒📒NOTE📒📒\nMake sure your information is right\n\nIf you cancel this section.Click here 👉👉👉 /cancel.')
+    # update.message.reply_text('Give your product key pair.\n\n\n👉👉👉Your product key pair.\n\nFormat like:👇👇\nBTC-USDT\nBTC-USDC\nBTC-EUR\nSOL-USDT\nSOL-USDC\n\n\n📒📒NOTE📒📒\nMake sure your information is right\n\nIf you cancel this section.Click here 👉👉👉 /cancel.')
     return THIRD
 
 
 
 
 
-def collect_product_id(update: Update, context: CallbackContext) -> None:
-    collect_product_id = update.message.text
-    chat_id = update.callback_query.message.chat_id if update.callback_query else update.message.chat_id
+def collect_product_id(update: Update, context: CallbackContext) -> int:
+    if update.callback_query:
+        chat_id = update.callback_query.message.chat_id
+        collect_product_id = update.callback_query.data
+        update.callback_query.answer()
+        
+        context.user_data['collect_product_id'] = collect_product_id
+        global_user_data[chat_id] = context.user_data 
 
-    context.user_data['collect_product_id'] = collect_product_id 
-    global_user_data[chat_id] = context.user_data 
+    # collect_product_id = update.message.text
+    # chat_id = update.callback_query.message.chat_id if update.callback_query else update.message.chat_id
+
+    # context.user_data['collect_product_id'] = collect_product_id 
+    # global_user_data[chat_id] = context.user_data 
 
 
     keyboard = [
@@ -470,9 +493,9 @@ def collect_product_id(update: Update, context: CallbackContext) -> None:
 
     reply_markup = InlineKeyboardMarkup(keyboard)
     if update.callback_query:
-        context.bot.send_message(chat_id=chat_id, text='Please Choose:', reply_markup=reply_markup)
+        context.bot.send_message(chat_id=chat_id, text='<b>How much would you like to trade?</b> \n\n Please Choose:',parse_mode='HTML', reply_markup=reply_markup)
     else:
-        update.message.reply_text('How much would you like to trade? \n Please Choose:', reply_markup=reply_markup)
+        update.message.reply_text('How much would you like to trade? \n\n Please Choose:',parse_mode='Markdown', reply_markup=reply_markup)
     return  FOURTH
        
 
@@ -485,18 +508,18 @@ def collect_trade_amount(update: Update, context: CallbackContext) -> None:
         update.callback_query.answer()
 
         context.user_data['collect_trade_amount'] = selected_amount 
-        message = ("🥰🥰🥰Thank you for providing information.🥰🥰🥰\n🥳🥳Trade details are saved. \n\n🤩🤩Ready for auto trade. \n🤫Please Wait for auto Trade,WHen get buy sell signal then place order automatically.")
+        message = ("🥰🥰🥰Thank you for providing information.🥰🥰🥰\n🥳🥳Trade details are saved. \n\n🤩🤩Ready for auto trade. \n🤫Please Wait for auto Trade,WHen get buy sell signal then place order automatically.\n\n Home page for click here👉👉👉/home")
         
         
-        # for chat_id, user_data in global_user_data.items():
-        #     api_key = user_data['collect_api_key']
-        #     api_secret = user_data['collect_api_secret']
-        #     product_id = user_data['collect_product_id']
-        #     btc_size = user_data['collect_trade_amount']
-        #     print(api_key)
-        #     print(api_secret)
-        #     print(product_id)
-        #     print(btc_size)
+        for chat_id, user_data in global_user_data.items():
+            api_key = user_data['collect_api_key']
+            api_secret = user_data['collect_api_secret']
+            product_id = user_data['collect_product_id']
+            btc_size = user_data['collect_trade_amount']
+            print(api_key)
+            print(api_secret)
+            print(product_id)
+            print(btc_size)
 
         context.bot.send_message(chat_id=chat_id, text=message)
         return ConversationHandler.END
