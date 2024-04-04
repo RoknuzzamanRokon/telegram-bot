@@ -370,12 +370,15 @@ def generic_text_handler(update: Update, context: CallbackContext) -> None:
 
 # Global set to store unique chat IDs
 user_chat_ids = set()
-print(user_chat_ids)
+
 
 def subscribe(update, context):
     user_chat_id = update.effective_chat.id
-    user_chat_ids.add(user_chat_id) 
-    context.bot.send_message(chat_id=user_chat_id, text="🤝🤝Welcome!🤝🤝\n\n You're now subscribed to Narutoe AI Bot🥳🥳🥳🥳\n\nGo to /home page and enjoy🤝🤝 our subscriber service.")
+    if check_subscription(user_chat_id):
+        context.bot.send_message(chat_id=user_chat_id, text="You are already subscribed.👀")
+    else:
+        user_chat_ids.add(user_chat_id) 
+        context.bot.send_message(chat_id=user_chat_id, text="🤝🤝Welcome!🤝🤝\n\n You're now subscribed to Narutoe AI Bot🥳🥳🥳🥳\n\nGo to /home page and enjoy🤝🤝 our subscriber service.")
 
 def unsubscribe(update, context):
     user_chat_id = update.effective_chat.id
