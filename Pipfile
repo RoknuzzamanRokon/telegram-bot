@@ -10,6 +10,8 @@ python-dotenv = "*"
 schedule = "*"
 metatrader5 = "*"
 coinbase-advancedtrade-python = "*"
+solana = "==0.33.0"
+poetry = "*"
 
 [dev-packages]
 
