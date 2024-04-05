@@ -2,6 +2,7 @@ from telegram.ext import Updater, CallbackContext, CommandHandler, MessageHandle
 from telegram import Bot, Update, ForceReply, InlineKeyboardButton, InlineKeyboardMarkup
 from coinbase_advanced_trader.config import set_api_credentials
 from coinbase_advanced_trader.strategies.market_order_strategies import fiat_market_buy, fiat_market_sell
+from coinbase.wallet.client import Client
 import schedule
 import time
 import threading
@@ -9,6 +10,7 @@ from dotenv import load_dotenv
 import requests
 import os 
 from rsi_function import calculate_rsi, get_last_60_closing_prices
+from check_account import check_account_wallet
 from threading import Thread
 import logging
 
@@ -457,10 +459,30 @@ def collect_api_secret(update: Update, context: CallbackContext) -> int:
         [InlineKeyboardButton('BNB-USD', callback_data='BNB-USD'), InlineKeyboardButton('BNB-USDC', callback_data='BNB-USDC'),InlineKeyboardButton('BNB-USDT', callback_data='BNB-USDT')],
     ] 
     reply_markup = InlineKeyboardMarkup(keyboard)
+
+    api_key_2 = context.user_data.get('collect_api_key')
+    api_secret_2 = context.user_data.get('collect_api_secret')
+
+    wallet_balances = check_account_wallet(api_key=api_key_2, api_secret=api_secret_2)
+    # for chat_id, user_data in global_user_data.items():
+    #     api_key_2 = user_data['collect_api_key']
+    #     api_secret_2 = user_data['collect_api_secret']
+    #     print(api_key_2)
+    #     print(type(api_key_2))
+    #     print(api_secret_2)
+    #     print(type(api_secret_2))
+
+    #     check_account_wallet(api_key_2,api_secret_2)
+
+
+
+    # Include wallet balance in the message
+    balance_message = f'*Choose your product key pair*\n{wallet_balances}\nor cancel this operation click here 👉👉 /cancel\n\n👇👇👇👇👇👇👇👇👇👇👇👇'
+    
     if update.callback_query:
-        context.bot.send_message(chat_id=chat_id, text='Choose your product key pair\n\n👇👇👇👇👇👇👇👇👇👇👇👇', parse_mode='Markdown', reply_markup=reply_markup)
+        context.bot.send_message(chat_id=chat_id, text=balance_message, parse_mode='Markdown', reply_markup=reply_markup)
     else:
-        update.message.reply_text('*Choose your product key pair*\n\n👇👇👇👇👇👇👇👇👇👇👇👇', parse_mode='Markdown', reply_markup=reply_markup)
+        update.message.reply_text(balance_message, parse_mode='Markdown', reply_markup=reply_markup)
 
 
     # update.message.reply_text('Give your product key pair.\n\n\n👉👉👉Your product key pair.\n\nFormat like:👇👇\nBTC-USDT\nBTC-USDC\nBTC-EUR\nSOL-USDT\nSOL-USDC\n\n\n📒📒NOTE📒📒\nMake sure your information is right\n\nIf you cancel this section.Click here 👉👉👉 /cancel.')
@@ -494,9 +516,9 @@ def collect_product_id(update: Update, context: CallbackContext) -> int:
 
     reply_markup = InlineKeyboardMarkup(keyboard)
     if update.callback_query:
-        context.bot.send_message(chat_id=chat_id, text='<b>How much would you like to trade?</b> \n\n Please Choose:',parse_mode='HTML', reply_markup=reply_markup)
+        context.bot.send_message(chat_id=chat_id, text='<b>How much would you like to trade?</b> \n\nor cancel this operation click here 👉👉 /cancel\n\nor Please Choose:',parse_mode='HTML', reply_markup=reply_markup)
     else:
-        update.message.reply_text('How much would you like to trade? \n\n Please Choose:',parse_mode='Markdown', reply_markup=reply_markup)
+        update.message.reply_text('*How much would you like to trade?*\n\nor cancel this operation click here 👉👉 /cancel\n\nor Please Choose:',parse_mode='Markdown', reply_markup=reply_markup)
     return  FOURTH
        
 
@@ -695,12 +717,13 @@ def main():
 
     dp.add_handler(MessageHandler(Filters.text & ~Filters.command, generic_text_handler))
 
+    print('Done')
 
     bot_instance = updater.bot
     crypto_compare_api_key = os.getenv('CRYPTO_COMPARE_API')
 
     schedule.every(20).minutes.do(lambda: send_latest_crypto_news(bot=bot_instance, crypto_compare_api_key=crypto_compare_api_key))
-    schedule.every(3).minutes.do(lambda: send_rsi_signals(bot=bot_instance))
+    schedule.every(5).minutes.do(lambda: send_rsi_signals(bot=bot_instance))
 
     threading.Thread(target=lambda: schedule.run_pending()).start()
 
