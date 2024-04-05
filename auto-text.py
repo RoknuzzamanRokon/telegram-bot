@@ -416,16 +416,30 @@ def wallet_info(update, context):
     api_secret_2 = context.user_data.get('collect_api_secret')
     product_id = context.user_data.get('collect_product_id')
 
-    wallet_balances_1 = check_account_wallet(api_key=api_key_2, api_secret=api_secret_2)
-    wallet_balances_2 = check_account_wallet(api_key=api_key_2, api_secret=api_secret_2, product_id=product_id)
+    
 
     if api_key_2 == None:
-        action = "You need to register first. Go to /home page. and click 'trading bot'"
+        action = "You need to first on the trading bot.\n Go to /home page. and click 'trading bot'"
     else:
         if product_id == None:
-            action = f"*Your account information is*\n\n{wallet_balances_1}"
+            wallet_balances_1 = check_account_wallet(api_key=api_key_2, api_secret=api_secret_2)
+            if isinstance(wallet_balances_1, (list, dict)):
+                # If wallet_balances is not a string, convert/format it here. This is just an example.
+                wallet_balances_1 = '\n'.join([f"A\\C: {balance['account']} Wallet, Balance: {balance['amount']} {balance['currency']}" for balance in wallet_balances])
+
+
+            action = f"*Your account information*\n\n{wallet_balances_1}"
         else:
-            action = f"*Your account information is*\n\n{wallet_balances_1}\n\n\nCurrent use account information.\n{wallet_balances_2}"
+            
+            wallet_balances_1 = check_account_wallet(api_key=api_key_2, api_secret=api_secret_2)
+            if isinstance(wallet_balances_1, (list, dict)):
+                wallet_balances_1 = '\n'.join([f"A\\C: {balance['account']} Wallet, Balance: {balance['amount']} {balance['currency']}" for balance in wallet_balances])
+            
+            wallet_balances_2 = check_account_wallet(api_key=api_key_2, api_secret=api_secret_2, product_id=product_id)
+            if isinstance(wallet_balances_2, (list, dict)):
+                wallet_balances_2 = '\n'.join([f"A\\C: {balance['account']} Wallet, Balance: {balance['amount']} {balance['currency']}" for balance in wallet_balances])
+
+            action = f"*Your account information*\n\n{wallet_balances_1}\n\n\nCurrent use account information.\n{wallet_balances_2}"
 
 
     context.bot.send_message(chat_id= user_chat_id, text=action, parse_mode='Markdown')
@@ -505,30 +519,21 @@ def collect_api_secret(update: Update, context: CallbackContext) -> int:
     api_secret_2 = context.user_data.get('collect_api_secret')
 
     wallet_balances = check_account_wallet(api_key=api_key_2, api_secret=api_secret_2)
-    # for chat_id, user_data in global_user_data.items():
-    #     api_key_2 = user_data['collect_api_key']
-    #     api_secret_2 = user_data['collect_api_secret']
-    #     print(api_key_2)
-    #     print(type(api_key_2))
-    #     print(api_secret_2)
-    #     print(type(api_secret_2))
 
-    #     check_account_wallet(api_key_2,api_secret_2)
+    if isinstance(wallet_balances, (list, dict)):
+        # If wallet_balances is not a string, convert/format it here. This is just an example.
+        wallet_balances = '\n'.join([f"A\\C: {balance['account']} Wallet, Balance: {balance['amount']} {balance['currency']}" for balance in wallet_balances])
 
-
-
-    # Include wallet balance in the message
     balance_message = f'*Choose your product key pair*\n{wallet_balances}\nor cancel this operation click here 👉👉 /cancel\n\n👇👇👇👇👇👇👇👇👇👇👇👇'
-    
+
+    print(balance_message)  
+
     if update.callback_query:
         context.bot.send_message(chat_id=chat_id, text=balance_message, parse_mode='Markdown', reply_markup=reply_markup)
     else:
         update.message.reply_text(balance_message, parse_mode='Markdown', reply_markup=reply_markup)
 
-
-    # update.message.reply_text('Give your product key pair.\n\n\n👉👉👉Your product key pair.\n\nFormat like:👇👇\nBTC-USDT\nBTC-USDC\nBTC-EUR\nSOL-USDT\nSOL-USDC\n\n\n📒📒NOTE📒📒\nMake sure your information is right\n\nIf you cancel this section.Click here 👉👉👉 /cancel.')
     return THIRD
-
 
 
 
@@ -563,7 +568,15 @@ def collect_product_id(update: Update, context: CallbackContext) -> int:
     product_id = context.user_data.get('collect_product_id')
 
     wallet_balances = check_account_wallet(api_key=api_key_2, api_secret=api_secret_2, product_id=product_id)
+
+    if isinstance(wallet_balances, (list, dict)):
+        # If wallet_balances is not a string, convert/format it here. This is just an example.
+        wallet_balances = '\n'.join([f"A\\C: {balance['account']} Wallet, Balance: {balance['amount']} {balance['currency']}" for balance in wallet_balances])
+
+
     message = f"<b>How much would you like to trade?</b> \n\n or cancel this operation click here 👉👉 /cancel\n\n\n<b>Your Current balance</b>\n*****************************************\n{wallet_balances}\n*****************************************\n\n\n Please Choose trade amount."
+
+    print(message)
 
     if update.callback_query:
         context.bot.send_message(chat_id=chat_id, text=message,parse_mode='HTML', reply_markup=reply_markup)
@@ -604,7 +617,7 @@ def collect_trade_amount(update: Update, context: CallbackContext) -> None:
 
 
 def cancel(update: Update, context: CallbackContext) -> int:
-    update.message.reply_text('Trade cancelled.If you try again auto trading click here👉👉👉 /home and press ⚡trading bot⚡ button again.')
+    update.message.reply_text('Trade cancelled.\n\nIf you try again auto trading.\n click here👉👉👉 /home and press ⚡trading bot⚡ button again.')
     return ConversationHandler.END
 
 
@@ -675,7 +688,7 @@ def send_rsi_signals(bot):
     for chat_id, user_data in global_user_data.items():
         api_key = user_data['collect_api_key']
         api_secret = user_data['collect_api_secret']
-        product_id = user_data['collect_product_id']
+        product_id = user_data.get['collect_product_id','BTC-USDC'] # Add default value if product id none.
         btc_size = user_data['collect_trade_amount']
 
         coin_symbol = user_data['collect_product_id'].split('-')[0].upper()
