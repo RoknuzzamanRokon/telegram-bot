@@ -667,6 +667,11 @@ def send_rsi_signals(bot):
     for chat_id, user_data in global_user_data.items():
         api_key = user_data['collect_api_key']
         api_secret = user_data['collect_api_secret']
+
+        if not api_key or not api_secret:
+            print(f"Missing API credentials for chat_id {chat_id}. Waiting for user to provide them.")
+            continue
+
         product_id = user_data.get('collect_product_id', 'BTC-USDC') # Add default value if product id none.
         btc_size = user_data.get('collect_trade_amount', '0')
 
