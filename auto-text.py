@@ -423,22 +423,11 @@ def wallet_info(update, context):
     else:
         if product_id == None:
             wallet_balances_1 = check_account_wallet(api_key=api_key_2, api_secret=api_secret_2)
-            if isinstance(wallet_balances_1, (list, dict)):
-                # If wallet_balances is not a string, convert/format it here. This is just an example.
-                wallet_balances_1 = '\n'.join([f"A\\C: {balance['account']} Wallet, Balance: {balance['amount']} {balance['currency']}" for balance in wallet_balances])
-
-
             action = f"*Your account information*\n\n{wallet_balances_1}"
         else:
             
             wallet_balances_1 = check_account_wallet(api_key=api_key_2, api_secret=api_secret_2)
-            if isinstance(wallet_balances_1, (list, dict)):
-                wallet_balances_1 = '\n'.join([f"A\\C: {balance['account']} Wallet, Balance: {balance['amount']} {balance['currency']}" for balance in wallet_balances])
-            
             wallet_balances_2 = check_account_wallet(api_key=api_key_2, api_secret=api_secret_2, product_id=product_id)
-            if isinstance(wallet_balances_2, (list, dict)):
-                wallet_balances_2 = '\n'.join([f"A\\C: {balance['account']} Wallet, Balance: {balance['amount']} {balance['currency']}" for balance in wallet_balances])
-
             action = f"*Your account information*\n\n{wallet_balances_1}\n\n\nCurrent use account information.\n{wallet_balances_2}"
 
 
@@ -519,11 +508,6 @@ def collect_api_secret(update: Update, context: CallbackContext) -> int:
     api_secret_2 = context.user_data.get('collect_api_secret')
 
     wallet_balances = check_account_wallet(api_key=api_key_2, api_secret=api_secret_2)
-
-    if isinstance(wallet_balances, (list, dict)):
-        # If wallet_balances is not a string, convert/format it here. This is just an example.
-        wallet_balances = '\n'.join([f"A\\C: {balance['account']} Wallet, Balance: {balance['amount']} {balance['currency']}" for balance in wallet_balances])
-
     balance_message = f'*Choose your product key pair*\n{wallet_balances}\nor cancel this operation click here 👉👉 /cancel\n\n👇👇👇👇👇👇👇👇👇👇👇👇'
 
     print(balance_message)  
@@ -568,11 +552,6 @@ def collect_product_id(update: Update, context: CallbackContext) -> int:
     product_id = context.user_data.get('collect_product_id')
 
     wallet_balances = check_account_wallet(api_key=api_key_2, api_secret=api_secret_2, product_id=product_id)
-
-    if isinstance(wallet_balances, (list, dict)):
-        # If wallet_balances is not a string, convert/format it here. This is just an example.
-        wallet_balances = '\n'.join([f"A\\C: {balance['account']} Wallet, Balance: {balance['amount']} {balance['currency']}" for balance in wallet_balances])
-
 
     message = f"<b>How much would you like to trade?</b> \n\n or cancel this operation click here 👉👉 /cancel\n\n\n<b>Your Current balance</b>\n*****************************************\n{wallet_balances}\n*****************************************\n\n\n Please Choose trade amount."
 
