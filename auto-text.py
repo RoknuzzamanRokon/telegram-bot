@@ -408,7 +408,7 @@ def wallet_info(update, context):
     user_chat_id = update.effective_chat.id if update.effective_chat else update.callback_query.message.chat_id
 
     if not check_subscription(user_chat_id):
-        response_text = "You need to subscribe first."
+        response_text = "🙁🙁🙁🙁🙁🙁🙁🙁🙁\nYou need to subscribe first\n\n Click here 👉👉👉👉/subscribe\n\n or go to 👉👉👉👉👉👉/home."
         context.bot.send_message(chat_id=user_chat_id, text=response_text)
         return
     
@@ -419,7 +419,7 @@ def wallet_info(update, context):
     
 
     if api_key_2 == None:
-        action = "You need to first on the trading bot.\n Go to /home page. and click 'trading bot'"
+        action = "You need to first, on the ⚡trading bot⚡.\n Go to /home page. and click ⚡trading bot⚡"
     else:
         if product_id == None:
             wallet_balances_1 = check_account_wallet(api_key=api_key_2, api_secret=api_secret_2)
@@ -508,7 +508,7 @@ def collect_api_secret(update: Update, context: CallbackContext) -> int:
     api_secret_2 = context.user_data.get('collect_api_secret')
 
     wallet_balances = check_account_wallet(api_key=api_key_2, api_secret=api_secret_2)
-    balance_message = f'*Choose your product key pair*\n{wallet_balances}\nor cancel this operation click here 👉👉 /cancel\n\n👇👇👇👇👇👇👇👇👇👇👇👇'
+    balance_message = f'*Your all account info*\n\n{wallet_balances}\n\n\n*Choose your product key pair*\n\nor cancel this operation click here 👉👉 /cancel\n\n👇👇👇👇👇👇👇👇👇👇👇👇'
 
     print(balance_message)  
 
@@ -553,7 +553,7 @@ def collect_product_id(update: Update, context: CallbackContext) -> int:
 
     wallet_balances = check_account_wallet(api_key=api_key_2, api_secret=api_secret_2, product_id=product_id)
 
-    message = f"<b>How much would you like to trade?</b> \n\n or cancel this operation click here 👉👉 /cancel\n\n\n<b>Your Current balance</b>\n*****************************************\n{wallet_balances}\n*****************************************\n\n\n Please Choose trade amount."
+    message = f"<b>Your Current balance</b>\n*****************************************\n{wallet_balances}\n*****************************************\n\n<b>How much would you like to trade?</b> \n\n or cancel this operation click here 👉👉 /cancel\n\n\n Please Choose trade amount."
 
     print(message)
 
@@ -667,8 +667,8 @@ def send_rsi_signals(bot):
     for chat_id, user_data in global_user_data.items():
         api_key = user_data['collect_api_key']
         api_secret = user_data['collect_api_secret']
-        product_id = user_data.get['collect_product_id','BTC-USDC'] # Add default value if product id none.
-        btc_size = user_data['collect_trade_amount']
+        product_id = user_data.get('collect_product_id', 'BTC-USDC') # Add default value if product id none.
+        btc_size = user_data.get('collect_trade_amount', '0')
 
         coin_symbol = user_data['collect_product_id'].split('-')[0].upper()
         window_size = 15
