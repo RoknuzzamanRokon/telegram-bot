@@ -381,7 +381,6 @@ user_chat_ids = set()
 
 
 def subscribe(update, context):
-    user_chat_id = update.effective_chat.id
     if check_subscription(user_chat_id):
         context.bot.send_message(chat_id=user_chat_id, text="You are already subscribed.👀")
     else:
@@ -507,7 +506,7 @@ def collect_product_id(update: Update, context: CallbackContext) -> int:
     # context.user_data['collect_product_id'] = collect_product_id 
     # global_user_data[chat_id] = context.user_data 
 
-    
+
 
     keyboard = [
         [InlineKeyboardButton("5$", callback_data = '5'), InlineKeyboardButton("10$", callback_data='10'), InlineKeyboardButton("15$", callback_data='15')],
@@ -516,10 +515,18 @@ def collect_product_id(update: Update, context: CallbackContext) -> int:
     ]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
+
+    api_key_2 = context.user_data.get('collect_api_key')
+    api_secret_2 = context.user_data.get('collect_api_secret')
+    product_id = context.user_data.get('collect_product_id')
+
+    wallet_balances = check_account_wallet(api_key=api_key_2, api_secret=api_secret_2, product_id=product_id)
+    message = f"<b>How much would you like to trade?</b> \n\n or cancel this operation click here 👉👉 /cancel\n\n\n<b>Your Current balance</b>\n*****************************************\n{wallet_balances}\n*****************************************\n\n\n Please Choose trade amount."
+
     if update.callback_query:
-        context.bot.send_message(chat_id=chat_id, text='<b>How much would you like to trade?</b> \n\nor cancel this operation click here 👉👉 /cancel\n\nor Please Choose:',parse_mode='HTML', reply_markup=reply_markup)
+        context.bot.send_message(chat_id=chat_id, text=message,parse_mode='HTML', reply_markup=reply_markup)
     else:
-        update.message.reply_text('*How much would you like to trade?*\n\nor cancel this operation click here 👉👉 /cancel\n\nor Please Choose:',parse_mode='Markdown', reply_markup=reply_markup)
+        update.message.reply_text(text=message,parse_mode='HTML', reply_markup=reply_markup)
     return  FOURTH
        
 
