@@ -691,13 +691,13 @@ def send_rsi_signals(bot):
             set_api_credentials(api_key, api_secret)
             market_buy = fiat_market_buy(product_id, btc_size)
             buy_count = 1
-            message = f'Buy order placed: {market_buy}\n\nRSI value: {rsi_value}'
+            message = f'Hy!!!!!!\n\nAuto trading bot placed a Buy order.Order amount is {btc_size}\n\n\nCurrent RSI value:- {rsi_value}'
 
         elif rsi_value > 70 and buy_count == 1:
             set_api_credentials(api_key, api_secret)
             market_sell = fiat_market_sell(product_id, btc_size)
             buy_count = 0
-            message = f'Sell order placed: {market_sell}\n\nRSI value: {rsi_value}'
+            message = f'Hy!!!!!!\n\nAuto trading bot placed a sell order.Order amount is {btc_size}\n\n\nCurrent RSI value:- {rsi_value}'
 
         if message:
             bot.send_message(chat_id=chat_id, text=message)
