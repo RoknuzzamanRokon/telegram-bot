@@ -261,7 +261,8 @@ def home(update: Update, context: CallbackContext) -> None:
          [InlineKeyboardButton("⚡trading bot⚡", callback_data='trade_now')],
          [InlineKeyboardButton("💮Connect Admin💮", url='https://t.me/Rokon017399?text=👋+Hello')],
         [InlineKeyboardButton("🥰Subscribe🥰", callback_data='subscribe'),
-         InlineKeyboardButton("☹️Unsubscribe☹️", callback_data='unsubscribe')]
+         InlineKeyboardButton("☹️Unsubscribe☹️", callback_data='unsubscribe')],
+         [InlineKeyboardButton("Wallet information", callback_data='wallet_info')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     with open('photo\photo_2024-04-04_00-35-37.jpg', 'rb') as photo_file:
@@ -314,6 +315,9 @@ def button_click_handler(update: Update, context: CallbackContext) -> None:
         subscribe(update, context)
     elif query.data == 'unsubscribe':
         unsubscribe(update, context)
+
+    elif query.data == 'wallet_info':
+        wallet_info(update, context)
 
 
 def help(update: Update, context: CallbackContext) -> None:
@@ -395,6 +399,43 @@ def unsubscribe(update, context):
         context.bot.send_message(chat_id=user_chat_id, text="You have 🙁unsubscribed🙁 from Narutoe AI Bot.\n\nBack to the /home page.")
     else:
         context.bot.send_message(chat_id=user_chat_id, text="You are not subscribed🙁🙁🙁.")
+
+
+
+
+
+def wallet_info(update, context):
+    user_chat_id = update.effective_chat.id if update.effective_chat else update.callback_query.message.chat_id
+
+    if not check_subscription(user_chat_id):
+        response_text = "You need to subscribe first."
+        context.bot.send_message(chat_id=user_chat_id, text=response_text)
+        return
+    
+    api_key_2 = context.user_data.get('collect_api_key')
+    api_secret_2 = context.user_data.get('collect_api_secret')
+    product_id = context.user_data.get('collect_product_id')
+
+    wallet_balances_1 = check_account_wallet(api_key=api_key_2, api_secret=api_secret_2)
+    wallet_balances_2 = check_account_wallet(api_key=api_key_2, api_secret=api_secret_2, product_id=product_id)
+
+    if api_key_2 == None:
+        action = "You need to register first. Go to /home page. and click 'trading bot'"
+    else:
+        if product_id == None:
+            action = f"*Your account information is*\n\n{wallet_balances_1}"
+        else:
+            action = f"*Your account information is*\n\n{wallet_balances_1}\n\n\nCurrent use account information.\n{wallet_balances_2}"
+
+
+    context.bot.send_message(chat_id= user_chat_id, text=action, parse_mode='Markdown')
+
+
+
+
+
+
+
 
 def check_subscriber_count(update, context):
     ADMIN_CHAT_ID = os.getenv('CHAT_ID')
