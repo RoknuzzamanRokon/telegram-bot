@@ -507,6 +507,7 @@ def collect_product_id(update: Update, context: CallbackContext) -> int:
     # context.user_data['collect_product_id'] = collect_product_id 
     # global_user_data[chat_id] = context.user_data 
 
+    
 
     keyboard = [
         [InlineKeyboardButton("5$", callback_data = '5'), InlineKeyboardButton("10$", callback_data='10'), InlineKeyboardButton("15$", callback_data='15')],

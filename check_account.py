@@ -9,15 +9,28 @@ from coinbase.wallet.client import Client
 
 # client = Client(api_key, api_secret)
 
-def check_account_wallet(api_key, api_secret):
-    client = Client(api_key,api_secret)
+# def check_account_wallet(api_key, api_secret, product_id = None):
+#     client = Client(api_key,api_secret)
+
+#     try:
+#         accounts = client.get_accounts()
+#         for account in accounts['data']:
+#             balance_amount = float(account['balance']['amount'])
+#             if balance_amount > 0:
+#                 print(f"A\C: {account['name']}, Balance: {account['balance']['amount']} {account['balance']['currency']}")
+#     except Exception as e:
+#         print("Error:", e)
+
+def check_account_wallet(api_key, api_secret, product_id=None):
+    client = Client(api_key, api_secret)
+    currencies = product_id.split('-') if product_id else []
 
     try:
         accounts = client.get_accounts()
         for account in accounts['data']:
             balance_amount = float(account['balance']['amount'])
-            if balance_amount > 0:
-                print(f"A\C: {account['name']}, Balance: {account['balance']['amount']} {account['balance']['currency']}")
+            account_currency = account['balance']['currency']
+            if balance_amount > 0 and (not product_id or account_currency in currencies):
+                print(f"A\\C: {account['name']}, Balance: {balance_amount} {account_currency}")
     except Exception as e:
         print("Error:", e)
-
