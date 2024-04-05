@@ -26,7 +26,7 @@ load_dotenv()
 crypto_compare_api_key = os.getenv('CRYPTO_COMPARE_API')
 api_alpha = os.environ.get('ALPHA_API')
 token_telegram = os.environ.get('TELEGRAM_TOKEN')
-coin_base_api_key = os.getenv('COIN_BASE_API_KEY')
+coin_base_api_key = os.getenv('COIN_BASE_API_KEY_1')
 
 
 
@@ -61,7 +61,7 @@ def trade(update: Update, context: CallbackContext) -> None:
         return
 
     coin_symbol = 'BTC'
-    coin_base_api_key = os.getenv('COIN_BASE_API_KEY')
+    coin_base_api_key = os.getenv('COIN_BASE_API_KEY_1')
     window_size = 15
 
     closing_prices = get_last_60_closing_prices(coin_symbol, coin_base_api_key)
@@ -269,6 +269,7 @@ def button_click_handler(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     query.answer()
 
+    # This line is the focus: accessing chat_id correctly depending on the type of update
     chat_id = query.message.chat_id if query else update.message.chat_id
 
     if query.data == 'trade':
@@ -606,10 +607,9 @@ def send_rsi_signals(bot):
         btc_size = user_data['collect_trade_amount']
 
         coin_symbol = user_data['collect_product_id'].split('-')[0].upper()
-        coin_base_api_key = os.getenv('COIN_BASE_API_KEY')
         window_size = 15
 
-        closing_prices = get_last_60_closing_prices(coin_symbol, coin_base_api_key)
+        closing_prices = get_last_60_closing_prices(coin_symbol, api_key)
 
         if not closing_prices or isinstance(closing_prices, str):
             print("Failed to fetch closing prices for RSI calculation.")
