@@ -381,6 +381,7 @@ user_chat_ids = set()
 
 
 def subscribe(update, context):
+    user_chat_id = update.effective_chat.id
     if check_subscription(user_chat_id):
         context.bot.send_message(chat_id=user_chat_id, text="You are already subscribed.👀")
     else:
