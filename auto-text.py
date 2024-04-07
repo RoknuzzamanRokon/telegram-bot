@@ -531,13 +531,6 @@ def collect_product_id(update: Update, context: CallbackContext) -> int:
         context.user_data['collect_product_id'] = collect_product_id
         global_user_data[chat_id] = context.user_data 
 
-    # collect_product_id = update.message.text
-    # chat_id = update.callback_query.message.chat_id if update.callback_query else update.message.chat_id
-
-    # context.user_data['collect_product_id'] = collect_product_id 
-    # global_user_data[chat_id] = context.user_data 
-
-
 
     keyboard = [
         [InlineKeyboardButton("5$", callback_data = '5'), InlineKeyboardButton("10$", callback_data='10'), InlineKeyboardButton("15$", callback_data='15')],
@@ -576,15 +569,6 @@ def collect_trade_amount(update: Update, context: CallbackContext) -> None:
         message = ("🥰🥰🥰Thank you for providing information.🥰🥰🥰\n🥳🥳Trade details are saved. \n\n🤩🤩Ready for auto trade. \n🤫Please Wait for auto Trade,WHen get buy sell signal then place order automatically.\n\n Home page for click here👉👉👉/home")
         
         
-        for chat_id, user_data in global_user_data.items():
-            api_key = user_data['collect_api_key']
-            api_secret = user_data['collect_api_secret']
-            product_id = user_data['collect_product_id']
-            btc_size = user_data['collect_trade_amount']
-            print(api_key)
-            print(api_secret)
-            print(product_id)
-            print(btc_size)
 
         context.bot.send_message(chat_id=chat_id, text=message)
         return ConversationHandler.END
