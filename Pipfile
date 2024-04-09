@@ -12,6 +12,7 @@ coinbase-advancedtrade-python = "*"
 poetry = "*"
 coinbase = "*"
 update = "*"
+pre-commit = "*"
 
 [dev-packages]
 

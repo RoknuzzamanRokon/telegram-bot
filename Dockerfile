@@ -10,5 +10,4 @@ EXPOSE 80
 
 ENV NAME World
 
-CMD ["python", "./auto-txt.py"]
-
+CMD ["python", "./auto-text.py"]
