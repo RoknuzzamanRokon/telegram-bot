@@ -690,10 +690,22 @@ def collect_trade_amount(update: Update, context: CallbackContext) -> None:
         chat_id = update.callback_query.message.chat_id
         selected_amount = update.callback_query.data
         update.callback_query.answer()
+        
+        global buy_count, global_user_data
 
         context.user_data["collect_trade_amount"] = selected_amount
-        message = "🥰🥰🥰Thank you for providing information.🥰🥰🥰\n🥳🥳Trade details are saved. \n\n🤩🤩Ready for auto trade. \n🤫Please Wait for auto Trade,WHen get buy sell signal then place order automatically.\n\n Home page for click here👉👉👉/home"
 
+        message_parts = []
+        for chat_id, user_data in global_user_data.items():
+            product_id = user_data.get("collect_product_id") 
+            btc_size = user_data.get("collect_trade_amount")
+            message_parts.append(f"Your product is {product_id}\nTrader amount {btc_size}\n\n")
+
+        message = "🥰🥰🥰Thank you for providing information.🥰🥰🥰\n🥳🥳\n" + "\n".join(message_parts) +   "\n\n" + \
+            "Trade details are saved.\n\n🤩🤩\nReady for auto trade.\n" \
+            "🤫Please Wait for auto Trade,\nWhen get buy sell signal then place order automatically.\n\n" \
+            "Home page for click here👉👉👉/home"
+        
         context.bot.send_message(chat_id=chat_id, text=message)
         return ConversationHandler.END
     else:
@@ -772,9 +784,7 @@ def send_rsi_signals(bot):
             )
             continue
 
-        product_id = user_data.get(
-            "collect_product_id", "BTC-USDC"
-        )  # Add default value if product id none.
+        product_id = user_data.get("collect_product_id", "BTC-USDC")  # Add default value if product id none.
         btc_size = user_data.get("collect_trade_amount", "0")
 
         coin_symbol = user_data["collect_product_id"].split("-")[0].upper()
