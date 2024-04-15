@@ -531,30 +531,58 @@ def wallet_info(update, context):
     context.bot.send_message(chat_id=user_chat_id, text=action, parse_mode="Markdown")
 
 
-def reset_info(update, context):
-    user_chat_id = (update.effective_chat.id if update.effective_chat else update.callback_query.message.chat_id)
+# def reset_info(update, context):
+#     user_chat_id = (update.effective_chat.id if update.effective_chat else update.callback_query.message.chat_id)
 
+
+#     if not check_subscription(user_chat_id):
+#         response_text = "🙁🙁🙁🙁🙁🙁🙁🙁🙁\nYou need to subscribe first\n\n Click here 👉👉👉👉/subscribe\n\n or go to 👉👉👉👉👉👉/home."
+#         context.bot.send_message(chat_id=user_chat_id, text=response_text)
+#         return
+    
+#     api_key_2 = context.user_data.get("collect_api_key")
+#     api_secret_2 = context.user_data.get("collect_api_secret")
+
+#     if api_key_2 == None or api_secret_2 == None:
+#         response_text = "I have not save your api information. Go to /home page and click trading bot button."
+#         context.bot.send_message(chat_id=user_chat_id, text=response_text)
+#         return
+    
+#     context.bot_data['api_key'] = None
+#     context.bot_data['api_secret'] = None
+
+#     action = "Trading information has been reset.\n\n Go to /home and click trading bot button and give your wallet information."
+#     # Notify the user that the reset has been successful
+
+#     context.bot.send_message(chat_id=user_chat_id, text=action)
+
+def reset_info(update, context):
+    if update.effective_chat:
+        user_chat_id = update.effective_chat.id
+    elif update.callback_query:
+        user_chat_id = update.callback_query.message.chat_id
+    else:
+        return
 
     if not check_subscription(user_chat_id):
-        response_text = "🙁🙁🙁🙁🙁🙁🙁🙁🙁\nYou need to subscribe first\n\n Click here 👉👉👉👉/subscribe\n\n or go to 👉👉👉👉👉👉/home."
+        response_text = "🙁 You need to subscribe first. Click here to subscribe: /subscribe or go to /home."
         context.bot.send_message(chat_id=user_chat_id, text=response_text)
         return
-    
-    api_key_2 = context.user_data.get("collect_api_key")
-    api_secret_2 = context.user_data.get("collect_api_secret")
 
-    if api_key_2 == None or api_secret_2 == None:
-        response_text = "I have not save your api information. Go to /home page and click trading bot button."
+    api_key = context.user_data.get("collect_api_key")
+    api_secret = context.user_data.get("collect_api_secret")
+
+    if api_key is None or api_secret is None:
+        response_text = "I have not saved your API information. Please go to /home and click the trading bot button."
         context.bot.send_message(chat_id=user_chat_id, text=response_text)
         return
-    
-    context.bot_data['api_key'] = None
-    context.bot_data['api_secret'] = None
 
-    action = "Trading information has been reset.\n\n Go to /home and click trading bot button and give your wallet information."
-    # Notify the user that the reset has been successful
+    # Reset API key and secret in the same place they are stored
+    context.user_data['collect_api_key'] = None
+    context.user_data['collect_api_secret'] = None
+
+    action = "Trading information has been reset. Please go to /home, click the trading bot button, and provide your wallet information."
     context.bot.send_message(chat_id=user_chat_id, text=action)
-
 
 
 def check_subscriber_count(update, context):
