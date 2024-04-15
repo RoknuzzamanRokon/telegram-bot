@@ -312,6 +312,7 @@ def home(update: Update, context: CallbackContext) -> None:
             InlineKeyboardButton("☹️Unsubscribe☹️", callback_data="unsubscribe"),
         ],
         [InlineKeyboardButton("Wallet information", callback_data="wallet_info")],
+        [InlineKeyboardButton("Reset information", callback_data="reset_info")],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     with open("photo/photo_2024-04-04_00-35-37.jpg", "rb") as photo_file:
@@ -395,6 +396,9 @@ def button_click_handler(update: Update, context: CallbackContext) -> None:
 
     elif query.data == "wallet_info":
         wallet_info(update, context)
+
+    elif query.data == "reset_info":
+        reset_info(update, context)
 
 
 def help(update: Update, context: CallbackContext) -> None:
@@ -526,6 +530,24 @@ def wallet_info(update, context):
 
     context.bot.send_message(chat_id=user_chat_id, text=action, parse_mode="Markdown")
 
+
+def reset_info(update, context):
+    user_chat_id = (update.effective_chat.id if update.effective_chat else update.callback_query.message.chat_id)
+
+    context.bot_data['api_key'] = None
+    context.bot_data['api_secret'] = None
+    context.bot_data['trading_parameters'] = {'max_trade_limit': 0, 'trade_strategy': None}
+
+    action = "Trading information has been reset.\n\n Go to /home and click trading bot button and give your wallet information."
+    # Notify the user that the reset has been successful
+    context.bot.send_message(chat_id=user_chat_id, text=action)
+
+
+    if not check_subscription(user_chat_id):
+        response_text = "🙁🙁🙁🙁🙁🙁🙁🙁🙁\nYou need to subscribe first\n\n Click here 👉👉👉👉/subscribe\n\n or go to 👉👉👉👉👉👉/home."
+        context.bot.send_message(chat_id=user_chat_id, text=response_text)
+        return
+    
 
 def check_subscriber_count(update, context):
     ADMIN_CHAT_ID = os.getenv("CHAT_ID")
