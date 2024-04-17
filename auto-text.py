@@ -36,7 +36,7 @@ load_dotenv()
 
 crypto_compare_api_key = os.getenv("CRYPTO_COMPARE_API")
 api_alpha = os.environ.get("ALPHA_API")
-token_telegram = os.environ.get("TELEGRAM_TOKEN_2")
+token_telegram = os.environ.get("TELEGRAM_TOKEN")
 coin_base_api_key = os.getenv("COIN_BASE_API_KEY_1")
 
 
