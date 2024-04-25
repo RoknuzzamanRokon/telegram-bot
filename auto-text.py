@@ -384,7 +384,7 @@ def button_click_handler(update: Update, context: CallbackContext) -> None:
         else:
             context.bot.sendMessage(
                 chat_id=chat_id,
-                text="Please type /trade_now to start trading.\n\nor press this 👉👉👉👉👉'/trade_now' ",
+                text="Please type /trade_now to start trading.\n\nor press this 👉👉👉👉👉'/trade_now'\n\n\n If 'trader_now' not working press 👉👉👉'/cancel' and try again.",
             )
 
     elif query.data == "help":
